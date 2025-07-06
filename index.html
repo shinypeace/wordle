@@ -551,26 +551,21 @@ font-size: 0.8rem;
     </div>
 <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <script>
-        // Инициализация VK
-        const APP_ID = 53861990;
+// === VK Integration ===
+        const APP_ID = 53861990; // Ваш ID приложения
         let vkUser = null;
         let vkUserId = null;
         let vkAccessToken = null;
-
+        
         // Инициализация VK Bridge
         async function initVK() {
             try {
-                // Инициализация VK Bridge
                 await vkBridge.send('VKWebAppInit', {});
                 
                 // Получаем информацию о пользователе
                 const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
                 vkUser = userInfo;
                 vkUserId = userInfo.id;
-                
-                // Обновляем имя игрока в статистике
-                document.getElementById('playerName').textContent = 
-                    vkUser.first_name + ' ' + vkUser.last_name;
                 
                 // Получаем токен доступа
                 const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
@@ -582,7 +577,6 @@ font-size: 0.8rem;
                 // Загружаем статистику
                 await loadStats();
                 
-                
                 console.log('VK Bridge инициализирован');
             } catch (error) {
                 console.error('Ошибка инициализации VK Bridge:', error);
@@ -591,8 +585,69 @@ font-size: 0.8rem;
             }
         }
         
-        document.addEventListener('DOMContentLoaded', () => {
+        // Сохранение статистики в VK Storage
+        async function saveStats() {
+            const data = {
+                stats,
+                lastUpdated: Date.now(),
+                syncVersion: 1
+            };
+            
+            try {
+                // Сохраняем в облако VK
+                await vkBridge.send('VKWebAppStorageSet', {
+                    key: `wordleStats_${vkUserId}`,
+                    value: JSON.stringify(data),
+                    global: false
+                });
+                
+                // Дублируем в локальное хранилище
+                localStorage.setItem('wordleLocalSave', JSON.stringify(data));
+            } catch (err) {
+                console.error('Cloud save failed:', err);
+                // Fallback на локальное сохранение
+                localStorage.setItem('wordleLocalSave', JSON.stringify(data));
+            }
+        }
+        
+        // Загрузка статистики из VK Storage
+        async function loadStats() {
+            try {
+                // Пытаемся загрузить из облака VK
+                const cloudResponse = await vkBridge.send('VKWebAppStorageGet', {
+                    keys: [`wordleStats_${vkUserId}`],
+                    global: false
+                });
+                
+                if (cloudResponse.keys[0]?.value) {
+                    const cloudData = JSON.parse(cloudResponse.keys[0].value);
+                    
+                    // Проверяем версию данных
+                    if (cloudData.syncVersion === 1) {
+                        stats = cloudData.stats;
+                        return;
+                    }
+                }
+                
+                // Если в облаке нет данных, пробуем загрузить локальные
+                loadLocalStats();
+            } catch (err) {
+                console.error('Cloud load error:', err);
+                loadLocalStats();
+            }
+        }
+        
+        // Загрузка локальной статистики
+        function loadLocalStats() {
+            const localData = localStorage.getItem('wordleLocalSave');
+            if (localData) {
+                const parsedData = JSON.parse(localData);
+                stats = parsedData.stats || { played: 0, wins: 0, currentStreak: 0, maxStreak: 0 };
+            }
+        }
 
+        document.addEventListener('DOMContentLoaded',async () => {
+await initVK();
             // !!! ВАЖНО !!!
             // СКОПИРУЙТЕ СОДЕРЖИМОЕ ВАШЕГО dictionary.json И ВСТАВЬТЕ ЕГО СЮДА
             // ВМЕСТО ПРИМЕРА НИЖЕ.
@@ -4380,19 +4435,21 @@ setTimeout(() => {
                 }
             }
 
-            function updateStats(didWin) {
-                stats.played++;
-                if (didWin) {
-                    stats.wins++;
-                    stats.currentStreak++;
-                    if (stats.currentStreak > stats.maxStreak) {
-                        stats.maxStreak = stats.currentStreak;
-                    }
-                } else {
-                    stats.currentStreak = 0;
+             // Обновление статистики с сохранением
+        async function updateStats(didWin) {
+            stats.played++;
+            if (didWin) {
+                stats.wins++;
+                stats.currentStreak++;
+                if (stats.currentStreak > stats.maxStreak) {
+                    stats.maxStreak = stats.currentStreak;
                 }
-                localStorage.setItem('wordle-stats', JSON.stringify(stats));
+            } else {
+                stats.currentStreak = 0;
             }
+            
+            await saveStats();
+        }
 
             // === Обработчики событий ===
             function addEventListeners() {
