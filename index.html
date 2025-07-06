@@ -549,8 +549,48 @@ font-size: 0.8rem;
         <div id="toast" class="hidden"></div>
 
     </div>
-
+<script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <script>
+        // Инициализация VK
+        const APP_ID = 53861990;
+        let vkUser = null;
+        let vkUserId = null;
+        let vkAccessToken = null;
+
+        // Инициализация VK Bridge
+        async function initVK() {
+            try {
+                // Инициализация VK Bridge
+                await vkBridge.send('VKWebAppInit', {});
+                
+                // Получаем информацию о пользователе
+                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                vkUser = userInfo;
+                vkUserId = userInfo.id;
+                
+                // Обновляем имя игрока в статистике
+                document.getElementById('playerName').textContent = 
+                    vkUser.first_name + ' ' + vkUser.last_name;
+                
+                // Получаем токен доступа
+                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
+                    app_id: APP_ID,
+                    scope: 'storage'
+                });
+                vkAccessToken = tokenData.access_token;
+                
+                // Загружаем статистику
+                await loadStats();
+                
+                
+                console.log('VK Bridge инициализирован');
+            } catch (error) {
+                console.error('Ошибка инициализации VK Bridge:', error);
+                // Загружаем локальные данные, если не удалось подключиться к VK
+                loadLocalStats();
+            }
+        }
+        
         document.addEventListener('DOMContentLoaded', () => {
 
             // !!! ВАЖНО !!!
@@ -3993,32 +4033,34 @@ function init() {
             }
 
             function startGame(length) {
-                    wordLength = parseInt(length);
-                    if (!dictionaryData.words[wordLength] || dictionaryData.words[wordLength].length === 0) {
-                        showToast(`Нет слов длины ${wordLength}`);
-                        return;
-                    }
-                    
-                    currentRowIndex = 0;
-                    isGameOver = false;
-                    isProcessing = false;
-                    boardState = Array(maxGuesses).fill(null).map(() => Array(wordLength).fill(''));
-                    shareableResult = [];
-                    // <<< ИЗМЕНЕНИЕ: Сбрасываем массив правильных букв в начале игры
-                    correctLetterPositions = Array(wordLength).fill('');
+            wordLength = parseInt(length);
+            if (!dictionaryData.words[wordLength] || dictionaryData.words[wordLength].length === 0) {
+                showToast(`Нет слов длины ${wordLength}`);
+                return;
+            }
+            
+            currentRowIndex = 0;
+            isGameOver = false;
+            isProcessing = false;
+            boardState = Array(maxGuesses).fill(null).map(() => Array(wordLength).fill(''));
+            shareableResult = [];
+            correctLetterPositions = Array(wordLength).fill('');
 
-                    const wordList = dictionaryData.words[wordLength];
-                    secretWord = wordList[Math.floor(Math.random() * wordList.length)];
-                    console.log("Загаданное слово:", secretWord);
+            const wordList = dictionaryData.words[wordLength];
+            secretWord = wordList[Math.floor(Math.random() * wordList.length)];
+            console.log("Загаданное слово:", secretWord);
 
-                    createBoard();
-                    createKeyboard();
-                    
-                    gameTitle.textContent = `${wordLength} букв` ;
-                    mainMenu.classList.add('hidden');
-                    gameScreen.classList.remove('hidden');
-                    setTimeout(adjustGameHeight, 50);
-                }
+            createBoard();
+            createKeyboard();
+            
+            gameTitle.textContent = `${wordLength} БУКВ`;
+            mainMenu.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            // <<< ИЗМЕНЕНИЕ: Вызываем адаптацию высоты при старте игры
+            // Небольшая задержка, чтобы все элементы успели отрисоваться
+            setTimeout(adjustGameHeight, 50); 
+        }
 
             function createBoard() {
                 gameBoard.innerHTML = '';
