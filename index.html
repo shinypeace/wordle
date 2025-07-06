@@ -3897,6 +3897,7 @@ for (const key in dictionaryData.words) {
 }
 
             // === DOM Элементы ===
+        const app = document.getElementById('app'); // <<< ИЗМЕНЕНИЕ: элемент 'app' вынесен сюда для доступа из новой функции
         const mainMenu = document.getElementById('main-menu');
         const lengthSelector = document.querySelector('.length-selector');
         const themeSwitcher = document.querySelector('.theme-switcher');
@@ -3937,6 +3938,36 @@ for (const key in dictionaryData.words) {
         ];
         // <<< ИЗМЕНЕНИЕ: Добавлено состояние для хранения всех правильных букв
         let correctLetterPositions = [];
+
+// <<< НОВЫЙ КОД: Функция для оптимизации (чтобы код не выполнялся слишком часто)
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        // <<< НОВЫЙ КОД: Функция для адаптации высоты игрового поля
+        function adjustGameHeight() {
+            // Если мы не на игровом экране, ничего не делаем
+            if (gameScreen.classList.contains('hidden')) return;
+
+            const header = gameScreen.querySelector('header');
+            const keyboard = document.getElementById('keyboard');
+            const boardContainer = document.getElementById('game-board-container');
+            
+            const appHeight = app.clientHeight;
+            const headerHeight = header.offsetHeight;
+            const keyboardHeight = keyboard.offsetHeight;
+            
+            // Вычисляем доступную высоту для игрового поля
+            // 20px - это небольшой отступ сверху и снизу для красоты
+            const availableHeight = appHeight - headerHeight - keyboardHeight - 20;
+            
+            // Применяем вычисленную высоту к контейнеру поля
+            boardContainer.style.height = `${availableHeight}px`;
+        }
 
             // === Инициализация ===
 
@@ -3986,6 +4017,7 @@ function init() {
                     gameTitle.textContent = `СЛОВО ИЗ ${wordLength} БУКВ`;
                     mainMenu.classList.add('hidden');
                     gameScreen.classList.remove('hidden');
+                    setTimeout(adjustGameHeight, 50);
                 }
 
             function createBoard() {
@@ -4378,6 +4410,8 @@ mainMenu.classList.remove('hidden');
                         console.error('Could not copy text: ', err);
                     });
                 });
+
+                window.addEventListener('resize', debounce(adjustGameHeight, 100));
             }
 
             init();
