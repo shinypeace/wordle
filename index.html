@@ -263,44 +263,45 @@
 
     <script>
 
-// === VK Integration ===
-        const APP_ID = 53861990; // Ваш ID приложения
-        let vkUser = null;
-        let vkUserId = null;
-        let vkAccessToken = null;
+// === Простая интеграция VK ===
+const APP_ID = 53861990; // Ваш ID приложения
+let vkUser = null;
+let vkUserId = null;
+let vkAccessToken = null;
+
+// Инициализация VK Bridge (упрощенная)
+async function initVK() {
+    try {
+        // Инициализируем VK Bridge
+        await vkBridge.send('VKWebAppInit', {});
         
-        // Инициализация VK Bridge
-        async function initVK() {
-            try {
-                await vkBridge.send('VKWebAppInit', {});
-                
-                // Получаем информацию о пользователе
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                vkUser = userInfo;
-                vkUserId = userInfo.id;
-                
-                // Получаем токен доступа
-                const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
-                    app_id: APP_ID,
-                    scope: 'storage'
-                });
-                vkAccessToken = tokenData.access_token;
-                
-                // Загружаем статистику
-                await loadStats();
-                
-                console.log('VK Bridge инициализирован');
-            } catch (error) {
-                console.error('Ошибка инициализации VK Bridge:', error);
-                // Загружаем локальные данные, если не удалось подключиться к VK
-                loadLocalStats();
-            }
+        // Получаем базовую информацию о пользователе
+        const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+        vkUser = userInfo;
+        vkUserId = userInfo.id;
+        
+        console.log('VK Bridge инициализирован для пользователя:', userInfo.first_name, userInfo.last_name);
+        
+        // Получаем токен доступа (опционально, если нужен)
+        try {
+            const tokenData = await vkBridge.send('VKWebAppGetAuthToken', {
+                app_id: APP_ID,
+                scope: '' // Можно указать нужные scope при необходимости
+            });
+            vkAccessToken = tokenData.access_token;
+        } catch (tokenError) {
+            console.log('Не удалось получить токен доступа:', tokenError);
         }
         
-        
+    } catch (error) {
+        console.log('Упрощенная инициализация VK не удалась, работаем в standalone режиме:', error);
+    }
+}
 
-        document.addEventListener('DOMContentLoaded',async () => {
-await initVK();
+// Вызываем инициализацию при загрузке
+document.addEventListener('DOMContentLoaded', async () => {
+    await initVK();
+});
 
 
     document.addEventListener('DOMContentLoaded', () => {
