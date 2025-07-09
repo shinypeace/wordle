@@ -44,10 +44,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; overscroll-behavior-y: contain; }
         body { font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; transition: background-color 0.3s, color 0.3s; overflow: hidden; user-select: none; }
-        #app { width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px; }
+        #app { width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
-        /* === ГЛАВНОЕ МЕНЮ И ЭКРАН ДРУГА === */
         #main-menu, #friend-game-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; width: 100%; padding: 10px; }
         #main-menu h1 { font-size: 3rem; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 1rem; }
         #main-menu p { font-size: 1.1rem; margin-bottom: 2.5rem; color: var(--color-absent); }
@@ -69,7 +68,6 @@
         .paste-button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background-color: var(--key-bg); border: none; border-radius: 6px; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--key-text-color); }
         .code-display { padding: 20px; background-color: var(--bg-color); border: 2px dashed var(--tile-border-color); border-radius: 8px; font-family: monospace; font-size: 1.2rem; font-weight: 700; word-break: break-all; margin-bottom: 10px; }
         
-        /* === ИГРОВОЙ ЭКРАН === */
         #game-screen { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 5px; position: relative; z-index: 10; width: 100%; flex-shrink: 0; }
         header h2 { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; font-weight: 800; letter-spacing: 0.05em; text-align: center; pointer-events: none; }
@@ -92,7 +90,6 @@
         .row.win { animation: bounce 0.8s ease-in-out; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
 
-        /* === КЛАВИАТУРА === */
         #keyboard { width: 100%; padding: 5px 0; user-select: none; flex-shrink: 0; }
         .keyboard-row { display: flex; justify-content: center; margin: 0 auto 8px; gap: 6px; }
         .key { font-family: var(--font-family); font-weight: 600; background-color: var(--key-bg); color: var(--key-text-color); border: none; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-transform: uppercase; height: 58px; flex: 1; font-size: 1rem; transition: background-color 0.2s, transform 0.1s; }
@@ -110,7 +107,6 @@
             .keyboard-row { gap: 4px; }
         }
         
-        /* === МОДАЛЬНЫЕ ОКНА === */
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-bg); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
         .modal-content { background-color: var(--tile-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px var(--shadow-color); text-align: center; width: 100%; max-width: 520px; animation: fadeIn 0.3s ease; max-height: 90vh; display: flex; flex-direction: column; }
         .modal-content h3 { font-size: 2rem; margin-bottom: 20px; flex-shrink: 0; }
@@ -125,7 +121,6 @@
         .stat-value { font-size: 2rem; font-weight: 800; }
         .stat-label { font-size: 0.8rem; color: var(--color-absent); }
 
-        /* === ТАБЛИЦА СТАТИСТИКИ === */
         #stats-table-container { width: 100%; flex-grow: 1; overflow-y: auto; }
         .stats-table { width: 100%; border-collapse: collapse; }
         .stats-table th, .stats-table td { padding: 12px 15px; text-align: center; border-bottom: 1px solid var(--tile-border-color); }
@@ -142,7 +137,6 @@
             .stats-table td:before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--color-absent); }
         }
 
-        /* === УВЕДОМЛЕНИЕ (ТОСТ) === */
         #toast { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 20px; z-index: 2000; font-weight: 600; animation: toast-in-out 3s ease-in-out forwards; pointer-events: none; opacity: 0; }
         @keyframes toast-in-out {
             0% { transform: translate(-50%, -20px); opacity: 0; }
@@ -269,7 +263,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-        const APP_ID = 53861990; // Ваш ID приложения
+        const APP_ID = 53861990; 
         let vkUserId = null;
 
         const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
@@ -3789,7 +3783,6 @@
         let isGameOver = false;
         let isProcessing = false;
         let isFriendMode = false;
-        let lastHintTimestamp = 0;
         let gamesPlayedSinceAd = 0;
         let boardState = [];
         let shareableResult = [];
@@ -3802,13 +3795,10 @@
                 await vkBridge.send('VKWebAppInit');
                 const user = await vkBridge.send('VKWebAppGetUserInfo');
                 vkUserId = user.id;
-                console.log('VK User ID:', vkUserId);
             } catch (error) {
-                console.error('VK Init Error, running in guest mode.', error);
                 vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
                 localStorage.setItem('guestUserId', vkUserId);
             }
-            
             loadTheme();
             await loadStats();
             createMainMenu();
@@ -3822,7 +3812,6 @@
             try {
                 await vkBridge.send('VKWebAppStorageSet', { key: storageKey, value: dataToSave });
             } catch (error) {
-                console.warn('VK Storage.Set failed, saving to localStorage.', error);
                 localStorage.setItem(storageKey, dataToSave);
             }
         }
@@ -3836,7 +3825,7 @@
                     return;
                 }
             } catch (error) {
-                console.warn('VK Storage.Get failed, loading from localStorage.', error);
+                 /* continue to localStorage */
             }
             const localData = localStorage.getItem(storageKey);
             if (localData) { stats = JSON.parse(localData); }
@@ -3845,7 +3834,6 @@
         function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; }
         function encodeWord(word) { try { return btoa(encodeURIComponent(word)); } catch (e) { return null; } }
         function decodeWord(encoded) { try { return decodeURIComponent(atob(encoded)); } catch (e) { return null; } }
-
         function adjustGameHeight() { createBoard(); }
 
         function showMainMenu() {
@@ -3900,11 +3888,11 @@
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
             const boardRatio = wordLength / maxGuesses;
-            let boardWidth = containerWidth;
-            let boardHeight = boardWidth / boardRatio;
-            if (boardHeight > containerHeight) {
-                boardHeight = containerHeight;
-                boardWidth = boardHeight * boardRatio;
+            let boardHeight = containerHeight;
+            let boardWidth = boardHeight * boardRatio;
+            if (boardWidth > containerWidth) {
+                boardWidth = containerWidth;
+                boardHeight = boardWidth / boardRatio;
             }
             gameBoard.style.width = `${boardWidth}px`;
             gameBoard.style.height = `${boardHeight}px`;
@@ -3986,8 +3974,8 @@
             const result = checkGuess(guess);
             await animateGuess(result);
             updateKeyboard(result);
-            if (guess === secretWord) { winGame(); } 
-            else if (currentRowIndex === maxGuesses - 1) { loseGame(); } 
+            if (guess === secretWord) { await winGame(); } 
+            else if (currentRowIndex === maxGuesses - 1) { await loseGame(); } 
             else { moveToNextRow(); }
             isProcessing = false;
         }
@@ -4063,17 +4051,22 @@
         async function handleHint() {
             if (isGameOver || isProcessing) return;
             try {
-                const adResult = await vkBridge.send('VKWebAppShowRewardAd', { ad_format: 'reward' });
-                if (adResult.result) {
-                    const firstEmptyIndex = boardState[currentRowIndex].indexOf('');
-                    if (firstEmptyIndex === -1) { showToast('Ряд заполнен, подсказка невозможна'); return; }
-                    const hintLetter = secretWord[firstEmptyIndex];
-                    addLetter(hintLetter);
-                    const tile = getTile(currentRowIndex, firstEmptyIndex);
-                    tile.style.animation = 'pop 0.2s ease-in-out';
-                    tile.addEventListener('animationend', () => tile.style.animation = '', { once: true });
+                const adStatus = await vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'reward' });
+                if (adStatus.result) {
+                    const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
+                    if (adResult.result) {
+                        const firstEmptyIndex = boardState[currentRowIndex].indexOf('');
+                        if (firstEmptyIndex === -1) { showToast('Ряд заполнен, подсказка невозможна'); return; }
+                        const hintLetter = secretWord[firstEmptyIndex];
+                        addLetter(hintLetter);
+                        const tile = getTile(currentRowIndex, firstEmptyIndex);
+                        tile.style.animation = 'pop 0.2s ease-in-out';
+                        tile.addEventListener('animationend', () => tile.style.animation = '', { once: true });
+                    } else {
+                        showToast('Просмотрите рекламу до конца');
+                    }
                 } else {
-                    showToast('Просмотрите рекламу, чтобы получить подсказку');
+                    showToast('Подсказка пока недоступна, попробуйте позже');
                 }
             } catch (error) {
                 console.error('Rewarded ad error:', error);
@@ -4082,12 +4075,13 @@
         }
 
         async function onGameEnd() {
+            if (isFriendMode) return;
             gamesPlayedSinceAd++;
             if (gamesPlayedSinceAd >= 2) {
                 try {
-                    const adResult = await vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'interstitial' });
-                    if(adResult.result) {
-                        await vkBridge.send('VKWebAppShowInterstitialAd', {});
+                    const adStatus = await vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'interstitial' });
+                    if(adStatus.result) {
+                        await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
                         gamesPlayedSinceAd = 0;
                     }
                 } catch (error) {
@@ -4098,23 +4092,29 @@
 
         async function winGame() {
             isGameOver = true;
-            if (!isFriendMode) await updateStats(true);
-            setTimeout(async () => {
-                gameBoard.children[currentRowIndex].classList.add('win');
-                endgameTitle.textContent = "Победа! 🎉";
-                await onGameEnd();
-                showEndGameModal();
-            }, wordLength * 100 + 300);
+            await updateStats(true);
+            return new Promise(resolve => {
+                setTimeout(async () => {
+                    gameBoard.children[currentRowIndex].classList.add('win');
+                    endgameTitle.textContent = "Победа! 🎉";
+                    await onGameEnd();
+                    showEndGameModal();
+                    resolve();
+                }, wordLength * 100 + 300);
+            });
         }
         
         async function loseGame() {
             isGameOver = true;
-            if (!isFriendMode) await updateStats(false);
-            setTimeout(async () => {
-                endgameTitle.textContent = "Увы, не угадали 😔";
-                await onGameEnd();
-                showEndGameModal();
-            }, wordLength * 100 + 300);
+            await updateStats(false);
+            return new Promise(resolve => {
+                setTimeout(async () => {
+                    endgameTitle.textContent = "Увы, не угадали 😔";
+                    await onGameEnd();
+                    showEndGameModal();
+                    resolve();
+                }, wordLength * 100 + 300);
+            });
         }
         
         function showEndGameModal() {
@@ -4123,8 +4123,7 @@
                 statsContainer.classList.add('hidden');
                 newGameButton.classList.add('hidden');
                 backToMenuFromEndgameBtn.classList.remove('hidden');
-            } 
-            else {
+            } else {
                 statsContainer.classList.remove('hidden');
                 newGameButton.classList.remove('hidden');
                 backToMenuFromEndgameBtn.classList.add('hidden');
@@ -4165,11 +4164,20 @@
         }
         
         function showToast(message) {
+            const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.classList.remove('hidden');
             toast.style.animation = 'none';
-            void toast.offsetWidth; // Trigger reflow
+            toast.offsetHeight;
             toast.style.animation = 'toast-in-out 3s ease-in-out forwards';
+        }
+        
+        function createShareableText() {
+            const attemptCount = currentRowIndex + 1;
+            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇`;
+            const emojiMap = { 'correct': '🟩', 'present': '🟨', 'absent': '⬜' };
+            if (body.dataset.theme === 'dark') { emojiMap['absent'] = '⬛'; }
+            const grid = shareableResult.map(row => row.map(status => emojiMap[status]).join('')).join('\n');
+            return `${text}\n\n${grid}`;
         }
         
         function toggleTheme() {
@@ -4184,6 +4192,7 @@
         }
         
         async function updateStats(didWin) {
+            if(isFriendMode) return;
             if (!stats[wordLength]) { stats[wordLength] = { played: 0, wins: 0, currentStreak: 0 }; }
             const modeStats = stats[wordLength];
             modeStats.played++;
@@ -4219,7 +4228,7 @@
                     td.textContent = statsValues[header];
                     td.dataset.label = header;
                     tr.appendChild(td);
-                });
+});
                 tbody.appendChild(tr);
             });
             table.appendChild(tbody);
@@ -4239,7 +4248,6 @@
             pasteCodeBtn.addEventListener('click', async () => { try { const text = await navigator.clipboard.readText(); codeToGuessInput.value = text; } catch(e) { showToast('Не удалось вставить'); } });
             startGuessBtn.addEventListener('click', handleStartGuess);
             themeSwitcher.addEventListener('click', toggleTheme);
-
             let activeKey = null;
             const handlePressStart = (e) => { if (e.target.closest('.key')) { activeKey = e.target.closest('.key'); activeKey.classList.add('pressed'); } };
             const handlePressEnd = (e) => {
@@ -4255,9 +4263,7 @@
             keyboardContainer.addEventListener('mouseleave', () => { if (activeKey) { activeKey.classList.remove('pressed'); activeKey = null; } });
             keyboardContainer.addEventListener('touchstart', (e) => { e.preventDefault(); handlePressStart(e); }, { passive: false });
             keyboardContainer.addEventListener('touchend', (e) => { e.preventDefault(); handlePressEnd(e); }, { passive: false });
-            
             document.addEventListener('keydown', e => { if (!gameScreen.classList.contains('hidden')) { handleKeyPress(e.key); } });
-            
             pauseButton.addEventListener('click', () => pauseModal.classList.remove('hidden'));
             hintButton.addEventListener('click', handleHint);
             resumeButton.addEventListener('click', () => pauseModal.classList.add('hidden'));
@@ -4265,7 +4271,17 @@
             mainMenuButtonFromPause.addEventListener('click', () => { pauseModal.classList.add('hidden'); showMainMenu(); });
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
-            shareButton.addEventListener('click', () => { vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` }).catch(e => console.error(e)); });
+            shareButton.addEventListener('click', async () => {
+                const shareText = createShareableText();
+                try {
+                    await navigator.clipboard.writeText(shareText);
+                    showToast('Результат скопирован в буфер!');
+                    await vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` });
+                } catch(e) {
+                    showToast('Ошибка при отправке');
+                    console.error(e);
+                }
+            });
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
         
