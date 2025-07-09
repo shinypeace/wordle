@@ -137,12 +137,12 @@
             .stats-table td:before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--color-absent); }
         }
 
-        #toast { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 20px; z-index: 2000; font-weight: 600; animation: toast-in-out 3s ease-in-out forwards; pointer-events: none; opacity: 0; }
+        #toast { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 20px; z-index: 2000; font-weight: 600; animation: toast-in-out 3s ease-in-out forwards; pointer-events: none; opacity: 0; visibility: hidden; }
         @keyframes toast-in-out {
-            0% { transform: translate(-50%, -20px); opacity: 0; }
+            0% { transform: translate(-50%, -20px); opacity: 0; visibility: visible; }
             15% { transform: translate(-50%, 0); opacity: 1; }
             85% { transform: translate(-50%, 0); opacity: 1; }
-            100% { transform: translate(-50%, -20px); opacity: 0; }
+            100% { transform: translate(-50%, -20px); opacity: 0; visibility: hidden; }
         }
     </style>
 </head>
@@ -257,11 +257,12 @@
             </div>
         </div>
         
-        <div id="toast" class="hidden"></div>
+        <div id="toast"></div>
+
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
 
         const APP_ID = 53861990; 
         let vkUserId = null;
@@ -3824,9 +3825,7 @@
                     stats = JSON.parse(response.keys[0].value);
                     return;
                 }
-            } catch (error) {
-                 /* continue to localStorage */
-            }
+            } catch (error) { /* continue to localStorage */ }
             const localData = localStorage.getItem(storageKey);
             if (localData) { stats = JSON.parse(localData); }
         }
@@ -3872,7 +3871,7 @@
             isProcessing = false;
             boardState = Array(maxGuesses).fill(null).map(() => Array(wordLength).fill(''));
             shareableResult = [];
-            correctLetterPositions = Array(wordLength).fill('');
+            correctLetterPositions = Array(wordLength).fill(null);
             createKeyboard();
             gameTitle.textContent = isFriendMode ? 'СЛОВО ОТ ДРУГА' : `СЛОВО ИЗ ${wordLength} БУКВ`;
             mainMenu.classList.add('hidden');
@@ -3887,13 +3886,11 @@
             const container = document.getElementById('game-board-container');
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
-            const boardRatio = wordLength / maxGuesses;
-            let boardHeight = containerHeight;
-            let boardWidth = boardHeight * boardRatio;
-            if (boardWidth > containerWidth) {
-                boardWidth = containerWidth;
-                boardHeight = boardWidth / boardRatio;
-            }
+            const tileWidth = (containerWidth - (wordLength - 1) * 5) / wordLength;
+            const tileHeight = (containerHeight - (maxGuesses - 1) * 5) / maxGuesses;
+            const tileSize = Math.floor(Math.min(tileWidth, tileHeight));
+            const boardWidth = tileSize * wordLength + (wordLength - 1) * 5;
+            const boardHeight = tileSize * maxGuesses + (maxGuesses - 1) * 5;
             gameBoard.style.width = `${boardWidth}px`;
             gameBoard.style.height = `${boardHeight}px`;
             gameBoard.style.gridTemplateRows = `repeat(${maxGuesses}, 1fr)`;
@@ -3901,7 +3898,12 @@
                 const row = document.createElement('div');
                 row.className = 'board-row';
                 row.style.gridTemplateColumns = `repeat(${wordLength}, 1fr)`;
-                for (let j = 0; j < wordLength; j++) { const tile = document.createElement('div'); tile.className = 'tile'; row.appendChild(tile); }
+                for (let j = 0; j < wordLength; j++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.style.fontSize = `${tileSize * 0.5}px`;
+                    row.appendChild(tile);
+                }
                 gameBoard.appendChild(row);
             }
         }
@@ -4055,19 +4057,19 @@
                 if (adStatus.result) {
                     const adResult = await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' });
                     if (adResult.result) {
-                        const firstEmptyIndex = boardState[currentRowIndex].indexOf('');
-                        if (firstEmptyIndex === -1) { showToast('Ряд заполнен, подсказка невозможна'); return; }
-                        const hintLetter = secretWord[firstEmptyIndex];
-                        addLetter(hintLetter);
-                        const tile = getTile(currentRowIndex, firstEmptyIndex);
-                        tile.style.animation = 'pop 0.2s ease-in-out';
-                        tile.addEventListener('animationend', () => tile.style.animation = '', { once: true });
-                    } else {
-                        showToast('Просмотрите рекламу до конца');
-                    }
-                } else {
-                    showToast('Подсказка пока недоступна, попробуйте позже');
-                }
+                        let hintPlaced = false;
+                        for (let i = 0; i < wordLength; i++) {
+                            const tile = getTile(currentRowIndex, i);
+                            if (!tile.textContent) {
+                                tile.textContent = secretWord[i];
+                                tile.classList.add('placeholder');
+                                hintPlaced = true;
+                                break;
+                            }
+                        }
+                        if (!hintPlaced) { showToast('Ряд заполнен, подсказка невозможна'); }
+                    } else { showToast('Просмотрите рекламу до конца'); }
+                } else { showToast('Подсказка пока недоступна, попробуйте позже'); }
             } catch (error) {
                 console.error('Rewarded ad error:', error);
                 showToast('Ошибка при показе рекламы');
@@ -4084,9 +4086,7 @@
                         await vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'interstitial' });
                         gamesPlayedSinceAd = 0;
                     }
-                } catch (error) {
-                    console.error('Interstitial ad error:', error);
-                }
+                } catch (error) { console.error('Interstitial ad error:', error); }
             }
         }
 
@@ -4206,7 +4206,7 @@
             container.innerHTML = '';
             const table = document.createElement('table');
             table.className = 'stats-table';
-            const headers = ['Режим', '% побед', 'Сыграно', 'Серия побед'];
+            const headers = ['Режим', 'Сыграно', 'Отгадано', '% побед'];
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
             headers.forEach(text => { const th = document.createElement('th'); th.textContent = text; headerRow.appendChild(th); });
@@ -4219,16 +4219,16 @@
                 const tr = document.createElement('tr');
                 const statsValues = {
                     'Режим': `${len} букв`,
-                    '% побед': modeStats.played > 0 ? `${Math.round((modeStats.wins / modeStats.played) * 100)}%` : '—',
                     'Сыграно': modeStats.played > 0 ? modeStats.played : '—',
-                    'Серия побед': modeStats.played > 0 ? modeStats.currentStreak : '—'
+                    'Отгадано': modeStats.played > 0 ? modeStats.wins : '—',
+                    '% побед': modeStats.played > 0 ? `${Math.round((modeStats.wins / modeStats.played) * 100)}%` : '—',
                 };
                 headers.forEach(header => {
                     const td = document.createElement('td');
                     td.textContent = statsValues[header];
                     td.dataset.label = header;
                     tr.appendChild(td);
-});
+                });
                 tbody.appendChild(tr);
             });
             table.appendChild(tbody);
@@ -4275,12 +4275,9 @@
                 const shareText = createShareableText();
                 try {
                     await navigator.clipboard.writeText(shareText);
-                    showToast('Результат скопирован в буфер!');
+                    showToast('Результат скопирован!');
                     await vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` });
-                } catch(e) {
-                    showToast('Ошибка при отправке');
-                    console.error(e);
-                }
+                } catch(e) { showToast('Ошибка при отправке'); }
             });
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
