@@ -51,10 +51,11 @@
         #main-menu h1 { font-size: 3rem; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 1rem; }
         #main-menu p { font-size: 1.1rem; margin-bottom: 2.5rem; color: var(--color-absent); }
         .length-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 380px; margin-bottom: 20px; }
+        .main-menu-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 380px; }
         .menu-button { background-color: var(--key-bg); color: var(--key-text-color); font-family: var(--font-family); font-size: 1rem; font-weight: 700; border: none; padding: 20px 10px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; box-shadow: 0 2px 5px var(--shadow-color); user-select: none; white-space: nowrap; }
         .menu-button:hover { transform: translateY(-2px); filter: brightness(1.1); }
-        .friend-mode-button { background-color: var(--color-correct); color: var(--color-text-light); width: 100%; max-width: 380px; }
-        .stats-button { background-color: var(--color-present); color: var(--color-text-light); width: 100%; max-width: 380px; margin-top: 15px; }
+        .friend-mode-button { background-color: var(--color-correct); color: var(--color-text-light); }
+        .stats-button { background-color: var(--color-present); color: var(--color-text-light); }
         .theme-switcher { position: absolute; bottom: 30px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .theme-toggle { width: 50px; height: 26px; background-color: var(--key-bg); border-radius: 13px; position: relative; transition: background-color 0.3s; }
         .theme-toggle::before { content: ''; position: absolute; width: 20px; height: 20px; background-color: var(--bg-color); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; }
@@ -75,7 +76,7 @@
         #game-board-container { display: flex; justify-content: center; align-items: center; flex-grow: 1; overflow: hidden; width: 100%; padding: 5px; }
         #game-board { display: grid; grid-template-rows: repeat(6, 1fr); gap: 5px; max-width: 100%; max-height: 100%; }
         .board-row { display: grid; gap: 5px; }
-        .tile { display: inline-flex; justify-content: center; align-items: center; border: 2px solid var(--tile-border-color); background-color: var(--tile-bg); font-size: 2rem; font-weight: 700; text-transform: uppercase; color: var(--tile-text-color); transition: transform 0.2s, background-color 0.3s, border-color 0.3s; transform-style: preserve-3d; }
+        .tile { display: inline-flex; justify-content: center; align-items: center; border: 2px solid var(--tile-border-color); background-color: var(--tile-bg); font-weight: 700; text-transform: uppercase; color: var(--tile-text-color); transition: transform 0.2s, background-color 0.3s, border-color 0.3s; transform-style: preserve-3d; border-radius: 4px; }
         .tile.filled { border-color: #878a8c; }
         .tile.flip { animation: flip 0.6s ease forwards; }
         .tile.placeholder { color: color-mix(in srgb, var(--text-color) 40%, transparent); background-color: transparent; border-style: dashed; }
@@ -109,8 +110,9 @@
         
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-bg); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
         .modal-content { background-color: var(--tile-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px var(--shadow-color); text-align: center; width: 100%; max-width: 520px; animation: fadeIn 0.3s ease; max-height: 90vh; display: flex; flex-direction: column; }
-        .modal-content h3 { font-size: 2rem; margin-bottom: 20px; flex-shrink: 0; }
-        .modal-content p { margin-bottom: 25px; font-size: 1.1rem; }
+        .modal-body { flex-grow: 1; overflow-y: auto; text-align: left; padding-right: 10px; margin-right: -10px; }
+        .modal-content h3 { font-size: 2rem; margin-bottom: 20px; flex-shrink: 0; text-align: center;}
+        .modal-content p { margin-bottom: 25px; font-size: 1.1rem; text-align: center; }
         .modal-buttons { display: flex; flex-direction: column; gap: 15px; margin-top: 20px; flex-shrink: 0; }
         .modal-button { padding: 15px; border-radius: 8px; border: none; cursor: pointer; font-size: 1.1rem; font-weight: 700; font-family: var(--font-family); transition: transform 0.2s, filter 0.2s; user-select: none; }
         .modal-button:hover { transform: translateY(-2px); filter: brightness(1.05); }
@@ -121,13 +123,15 @@
         .stat-value { font-size: 2rem; font-weight: 800; }
         .stat-label { font-size: 0.8rem; color: var(--color-absent); }
 
-        #stats-table-container { width: 100%; flex-grow: 1; overflow-y: auto; }
+        .rules-example { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .example-tile { width: 48px; height: 48px; font-size: 2rem; border-radius: 4px; }
+
+        #stats-table-container { width: 100%; }
         .stats-table { width: 100%; border-collapse: collapse; }
         .stats-table th, .stats-table td { padding: 12px 15px; text-align: center; border-bottom: 1px solid var(--tile-border-color); }
         .stats-table th { font-size: 0.9rem; font-weight: 700; color: var(--color-absent); }
         .stats-table td:first-child { font-weight: 700; text-align: left; }
         .stats-table tbody tr:last-child td { border-bottom: none; }
-
         @media screen and (max-width: 600px) {
             .stats-table table, .stats-table thead, .stats-table tbody, .stats-table th, .stats-table td, .stats-table tr { display: block; }
             .stats-table thead tr { position: absolute; top: -9999px; left: -9999px; }
@@ -137,7 +141,8 @@
             .stats-table td:before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--color-absent); }
         }
 
-        #toast { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 20px; z-index: 2000; font-weight: 600; animation: toast-in-out 3s ease-in-out forwards; pointer-events: none; opacity: 0; visibility: hidden; }
+        #toast { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 20px; z-index: 2000; font-weight: 600; pointer-events: none; opacity: 0; visibility: hidden; }
+        .toast-show { animation: toast-in-out 3s ease-in-out forwards; }
         @keyframes toast-in-out {
             0% { transform: translate(-50%, -20px); opacity: 0; visibility: visible; }
             15% { transform: translate(-50%, 0); opacity: 1; }
@@ -154,8 +159,11 @@
             <h1>WORDLE</h1>
             <p>Выберите длину слова</p>
             <div class="length-selector"></div>
-            <button id="friend-mode-btn" class="menu-button friend-mode-button">Слово другу</button>
-            <button id="stats-button" class="menu-button stats-button">Статистика</button>
+            <div class="main-menu-buttons">
+                <button id="friend-mode-btn" class="menu-button friend-mode-button">Слово другу</button>
+                <button id="rules-button" class="menu-button">Правила</button>
+                <button id="stats-button" class="menu-button stats-button">Статистика</button>
+            </div>
             <div class="theme-switcher">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                 <div class="theme-toggle"></div>
@@ -223,20 +231,22 @@
         
         <div id="endgame-modal" class="modal-overlay hidden">
             <div class="modal-content">
-                <h3 id="endgame-title"></h3>
-                <p>Загаданное слово: <b id="secret-word-display"></b></p>
-                <div id="stats-container">
-                    <div class="stat">
-                        <span id="stat-played" class="stat-value">0</span>
-                        <span class="stat-label">Сыграно</span>
-                    </div>
-                    <div class="stat">
-                        <span id="stat-wins" class="stat-value">0%</span>
-                        <span class="stat-label">Побед</span>
-                    </div>
-                    <div class="stat">
-                        <span id="stat-streak" class="stat-value">0</span>
-                        <span class="stat-label">Серия побед</span>
+                <div class="modal-body" style="text-align: center;">
+                    <h3 id="endgame-title"></h3>
+                    <p>Загаданное слово: <b id="secret-word-display"></b></p>
+                    <div id="stats-container">
+                        <div class="stat">
+                            <span id="stat-played" class="stat-value">0</span>
+                            <span class="stat-label">Сыграно</span>
+                        </div>
+                        <div class="stat">
+                            <span id="stat-wins" class="stat-value">0%</span>
+                            <span class="stat-label">Побед</span>
+                        </div>
+                        <div class="stat">
+                            <span id="stat-streak" class="stat-value">0</span>
+                            <span class="stat-label">Серия побед</span>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-buttons">
@@ -250,9 +260,36 @@
         <div id="stats-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <h3>Статистика</h3>
-                <div id="stats-table-container"></div>
+                <div class="modal-body">
+                    <div id="stats-table-container"></div>
+                </div>
                 <div class="modal-buttons">
                     <button id="close-stats-btn" class="modal-button secondary">Закрыть</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="rules-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h3>Правила игры</h3>
+                <div class="modal-body">
+                    <p style="text-align: left; margin-bottom: 20px;">Отгадайте загаданное слово за 6 попыток.</p>
+                    <p style="text-align: left; margin-bottom: 20px;">После каждой попытки цвет плиток изменится, чтобы показать, насколько вы были близки к правильному ответу.</p>
+                    <div class="rules-example">
+                        <div class="tile example-tile correct">П</div>
+                        <span>Буква есть в слове и стоит на <b>верном</b> месте.</span>
+                    </div>
+                    <div class="rules-example">
+                        <div class="tile example-tile present">И</div>
+                        <span>Буква есть в слове, но стоит в <b>другом</b> месте.</span>
+                    </div>
+                    <div class="rules-example">
+                        <div class="tile example-tile absent">А</div>
+                        <span>Такой буквы в слове <b>нет</b>.</span>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button id="close-rules-btn" class="modal-button primary">Понятно</button>
                 </div>
             </div>
         </div>
@@ -3758,6 +3795,9 @@
         const statsButton = document.getElementById('stats-button');
         const statsModal = document.getElementById('stats-modal');
         const closeStatsBtn = document.getElementById('close-stats-btn');
+        const rulesButton = document.getElementById('rules-button');
+        const rulesModal = document.getElementById('rules-modal');
+        const closeRulesBtn = document.getElementById('close-rules-btn');
         const friendMenu = document.getElementById('friend-menu');
         const createWordBtn = document.getElementById('create-word-btn');
         const guessWordBtn = document.getElementById('guess-word-btn');
@@ -4063,6 +4103,8 @@
                             if (!tile.textContent) {
                                 tile.textContent = secretWord[i];
                                 tile.classList.add('placeholder');
+                                tile.style.animation = 'pop 0.3s ease-in-out';
+                                tile.addEventListener('animationend', () => { tile.style.animation = '' }, { once: true });
                                 hintPlaced = true;
                                 break;
                             }
@@ -4166,9 +4208,10 @@
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.style.animation = 'none';
-            toast.offsetHeight;
-            toast.style.animation = 'toast-in-out 3s ease-in-out forwards';
+            toast.classList.add('toast-show');
+            toast.addEventListener('animationend', () => {
+                toast.classList.remove('toast-show');
+            }, { once: true });
         }
         
         function createShareableText() {
@@ -4211,7 +4254,7 @@
             const headerRow = document.createElement('tr');
             headers.forEach(text => { const th = document.createElement('th'); th.textContent = text; headerRow.appendChild(th); });
             thead.appendChild(headerRow);
-            table.appendChild(thead);
+            table.appendChild(tbody);
             const tbody = document.createElement('tbody');
             const availableLengths = Object.keys(guessableWordsData.words);
             availableLengths.forEach(len => {
@@ -4239,7 +4282,9 @@
             lengthSelector.addEventListener('click', e => { if (e.target.classList.contains('menu-button')) { startGame(e.target.dataset.length); } });
             friendModeBtn.addEventListener('click', () => showFriendScreen('menu'));
             statsButton.addEventListener('click', () => { renderStatsTable(); statsModal.classList.remove('hidden'); });
+            rulesButton.addEventListener('click', () => { rulesModal.classList.remove('hidden'); });
             closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
+            closeRulesBtn.addEventListener('click', () => { rulesModal.classList.add('hidden'); });
             backToMainMenuBtn.addEventListener('click', () => { showMainMenu(); });
             createWordBtn.addEventListener('click', () => showFriendScreen('create'));
             guessWordBtn.addEventListener('click', () => showFriendScreen('guess'));
