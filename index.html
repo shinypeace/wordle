@@ -47,16 +47,36 @@
         #app { width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
-        #main-menu, #friend-game-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; width: 100%; padding: 10px; }
-        #main-menu h1 { font-size: 3rem; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 1rem; }
-        #main-menu p { font-size: 1.1rem; margin-bottom: 2.5rem; color: var(--color-absent); }
-        .length-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 380px; margin-bottom: 20px; }
+        #main-menu { 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around; /* Изменено для равномерного распределения */
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            width: 100%;
+            padding: 20px 10px;
+        }
+        #friend-game-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; width: 100%; padding: 10px; }
+
+        #main-menu h1 { font-size: 3rem; font-weight: 800; letter-spacing: 0.1em; }
+        #main-menu p { font-size: 1.1rem; color: var(--color-absent); }
+        .length-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 380px; }
         .main-menu-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 380px; }
         .menu-button { background-color: var(--key-bg); color: var(--key-text-color); font-family: var(--font-family); font-size: 1rem; font-weight: 700; border: none; padding: 20px 10px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; box-shadow: 0 2px 5px var(--shadow-color); user-select: none; white-space: nowrap; }
         .menu-button:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .friend-mode-button { background-color: var(--color-correct); color: var(--color-text-light); }
         .stats-button { background-color: var(--color-present); color: var(--color-text-light); }
-        .theme-switcher { position: absolute; bottom: 30px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        
+        .theme-switcher {
+            /* position: absolute; - Убрано */
+            /* bottom: 30px; - Убрано */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            margin-top: 10px; /* Добавлен небольшой отступ сверху */
+        }
         .theme-toggle { width: 50px; height: 26px; background-color: var(--key-bg); border-radius: 13px; position: relative; transition: background-color 0.3s; }
         .theme-toggle::before { content: ''; position: absolute; width: 20px; height: 20px; background-color: var(--bg-color); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; }
         [data-theme="dark"] .theme-toggle::before { transform: translateX(24px); }
@@ -220,7 +240,9 @@
 
         <div id="pause-modal" class="modal-overlay hidden">
             <div class="modal-content">
-                <h3>Пауза</h3>
+                <div class="modal-body" style="text-align: center;">
+                     <h3>Пауза</h3>
+                </div>
                 <div class="modal-buttons">
                     <button id="resume-button" class="modal-button primary">Продолжить</button>
                     <button id="restart-button" class="modal-button secondary">Новая игра</button>
@@ -301,8 +323,9 @@
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
-        const APP_ID = 53861990; 
+        const APP_ID = 53524708; 
         let vkUserId = null;
+
 
         const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
 "ВРАЧ", "ВХОД", "ГЛАЗ", "ГОРА", "ГРЕХ", "ГУБА", "ДАМА", "ДАЧА", "ДВОР", "ДЕЛО", "ДЕНЬ", "ДОЛГ", "ДОЛЯ", "ДОЧЬ", "ДРУГ", "ДУМА", "ДУША", "ДЯДЯ", "ЖЕНА", "ЗВУК", "ЗИМА", "ЗНАК",
@@ -3763,7 +3786,7 @@
 "ЭСХАТОЛОГИЯ", "ЭТНОГРАФИЗМ", "ЭТНОХОРОНИМ", "ЭФЕМЕРНОСТЬ", "ЭФФЕКТНОСТЬ", "ЭФФУЗИОМЕТР", "ЭХИНОКАКТУС", "ЭХИНОКОККОЗ", "ЮВЕЛИРНОСТЬ", "ЮДОФИЛЬСТВО", "ЮРИСПРУДЕНТ", "ЮСТИРОВАНИЕ",
 "ЯБЕДНИЧАНИЕ", "ЯБЕДНИЧАНЬЕ", "ЯЗЫКАСТОСТЬ", "ЯЗЫКОБЛУДИЕ", "ЯЗЫКОЗНАНИЕ", "ЯЗЫКОТВОРЕЦ", "ЯЗЫКОУЧЕНИЕ", "ЯМОКОПАТЕЛЬ", "ЯСНОВИДЕНИЕ", "ЯСНОВИДЯЩАЯ", "ЯСНОВИДЯЩИЙ", "ЯСТРЕБЯТНИК",
 "ЯХТКЛУБОВЕЦ"] } };
-        const normalizeDict = (dict) => { for (const key in dict.words) { if (Object.hasOwnProperty.call(dict.words, key)) { dict.words[key] = dict.words[key].map(word => word.toLowerCase()); } } };
+         const normalizeDict = (dict) => { for (const key in dict.words) { if (Object.hasOwnProperty.call(dict.words, key)) { dict.words[key] = dict.words[key].map(word => word.toLowerCase()); } } };
         normalizeDict(guessableWordsData);
         normalizeDict(validWordsData);
 
@@ -3924,6 +3947,7 @@
         function createBoard() {
             gameBoard.innerHTML = '';
             const container = document.getElementById('game-board-container');
+            if (!container) return;
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
             const tileWidth = (containerWidth - (wordLength - 1) * 5) / wordLength;
@@ -4206,7 +4230,6 @@
         }
         
         function showToast(message) {
-            const toast = document.getElementById('toast');
             toast.textContent = message;
             toast.classList.add('toast-show');
             toast.addEventListener('animationend', () => {
@@ -4254,7 +4277,7 @@
             const headerRow = document.createElement('tr');
             headers.forEach(text => { const th = document.createElement('th'); th.textContent = text; headerRow.appendChild(th); });
             thead.appendChild(headerRow);
-            table.appendChild(tbody);
+            table.appendChild(thead);
             const tbody = document.createElement('tbody');
             const availableLengths = Object.keys(guessableWordsData.words);
             availableLengths.forEach(len => {
@@ -4332,3 +4355,4 @@
     </script>
 </body>
 </html>
+
