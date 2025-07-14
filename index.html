@@ -3908,26 +3908,31 @@
         }
         
 function getPluralizedLetters(number) {
-            const num = parseInt(number, 10);
-            if (num === 1) {
-                return 'буква';
-            }
-            if (num >= 2 && num <= 4) {
-                return 'буквы';
-            }
-            return 'букв';
-        }
+    const num = parseInt(number, 10);
+    // Для чисел, заканчивающихся на 1, но не 11 (например, 1, 21, 31)
+    if (num % 10 === 1 && num % 100 !== 11) {
+        return 'буква';
+    }
+    // Для чисел, заканчивающихся на 2, 3, 4, но не 12, 13, 14
+    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) {
+        return 'буквы';
+    }
+    // Для всех остальных случаев
+    return 'букв';
+}
 
-        function createMainMenu() {
-            lengthSelector.innerHTML = '';
-            const availableLengths = Object.keys(guessableWordsData.words);
-            availableLengths.forEach(len => {
-                const button = document.createElement('button');
-                button.className = 'menu-button';
-                button.textContent = `${len} ${getPluralizedLetters(len)}`;
-                button.dataset.length = len;
-                lengthSelector.appendChild(button);
-            });
+function createMainMenu() {
+    lengthSelector.innerHTML = '';
+    const availableLengths = Object.keys(guessableWordsData.words);
+    availableLengths.forEach(len => {
+        const button = document.createElement('button');
+        button.className = 'menu-button';
+        button.textContent = `${len} ${getPluralizedLetters(len)}`;
+        button.dataset.length = len;
+        lengthSelector.appendChild(button);
+    });
+}
+
 
 
         function startGame(length, customWord = null) {
