@@ -207,10 +207,10 @@
             </div>
             <div id="display-code-view" class="friend-screen-container hidden">
                 <h2>Ссылка готова!</h2>
-                <p>Нажмите, чтобы отправить ссылку другу:</p>
+                <p>Поделитесь этой ссылкой с другом:</p>
                 <!-- Этот элемент теперь используется для хранения кода, но скрыт от пользователя -->
                 <div id="generated-code-display" class="code-display hidden"></div>
-                <button id="send-to-friend-btn" class="menu-button primary">Отправить другу</button>
+                <button id="send-to-friend-btn" class="menu-button primary">Поделиться ссылкой</button>
                 <button id="back-to-friend-menu-btn-2" class="menu-button">Назад</button>
             </div>
             <div id="guess-word-view" class="friend-screen-container hidden">
@@ -319,7 +319,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
-        const APP_ID = 54138999; // <--- ИЗМЕНЕНО: ID вашего приложения
+        const APP_ID = 54138999; // <--- ID вашего приложения
         let vkUserId = null;
 
 
@@ -3873,15 +3873,17 @@
                 localStorage.setItem('guestUserId', vkUserId);
             }
 
-            // Сначала проверяем, есть ли в ссылке загаданное слово от друга
-            const gameStartedFromFragment = checkUrlFragmentAndStartGame();
-
             loadTheme();
             await loadStats();
             
+            // ИСПРАВЛЕНО: Создаем главное меню в любом случае, чтобы оно было готово к показу
+            createMainMenu();
+            
+            // Сначала проверяем, есть ли в ссылке загаданное слово от друга
+            const gameStartedFromFragment = checkUrlFragmentAndStartGame();
+            
             // Показываем главное меню, только если игра не была запущена по ссылке
             if (!gameStartedFromFragment) {
-                createMainMenu();
                 showMainMenu();
             }
             
@@ -4331,15 +4333,19 @@
             guessWordBtn.classList.add('hidden');
             generateCodeBtn.addEventListener('click', handleGenerateCode);
 
-            // Обновленный обработчик для отправки ссылки другу
+            // ИСПРАВЛЕНО: Обработчик для отправки поста на стену с шаблонным сообщением
             sendToFriendBtn.addEventListener('click', async () => {
                 const code = generatedCodeDisplay.textContent;
                 if (!code) return;
                 try {
                     const shareLink = `https://vk.com/app${APP_ID}#${code}`;
-                    await vkBridge.send('VKWebAppShare', { link: shareLink });
+                    const message = 'Я загадал для тебя слово! Попробуй отгадать его в «Словли».';
+                    await vkBridge.send('VKWebAppShowWallPostBox', {
+                        message: message,
+                        attachments: shareLink
+                    });
                 } catch(e) {
-                    showToast('Ошибка при отправке');
+                    showToast('Ошибка при публикации');
                     console.error("Share error:", e);
                 }
             });
@@ -4377,5 +4383,4 @@
     </script>
 </body>
 </html>
-
 
