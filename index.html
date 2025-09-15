@@ -4333,7 +4333,6 @@
             guessWordBtn.classList.add('hidden');
             generateCodeBtn.addEventListener('click', handleGenerateCode);
 
-            // ИСПРАВЛЕНО: Теперь сообщение копируется в буфер, а ссылка отправляется в ЛС
             sendToFriendBtn.addEventListener('click', async () => {
                 const code = generatedCodeDisplay.textContent;
                 if (!code) return;
@@ -4341,20 +4340,17 @@
                 const message = 'Я загадал для тебя слово! Попробуй отгадать его в «Словли».';
                 
                 try {
-                    // Пытаемся скопировать сообщение в буфер обмена
-                    await vkBridge.send('VKWebAppCopyText', { text: message });
-                    showToast('Сообщение скопировано, вставьте его в диалог!');
-                } catch (e) {
-                    // Ошибка копирования (например, пользователь отказался), просто продолжаем
-                    console.warn('Could not copy text: ', e);
-                } finally {
-                    // В любом случае открываем диалог "Поделиться"
-                    try {
-                        await vkBridge.send('VKWebAppShare', { link: shareLink });
-                    } catch (shareError) {
-                        showToast('Ошибка при отправке');
-                        console.error("Share error:", shareError);
-                    }
+                    // ИСПРАВЛЕНО: Добавлен параметр 'text' напрямую в VKWebAppShare по вашему указанию.
+                    // Важное примечание: Этот параметр не задокументирован в официальном руководстве VK Bridge
+                    // для отправки в личные сообщения и его работа не гарантируется.
+                    // Если текст не будет добавляться, значит, ВКонтакте больше не поддерживает эту возможность.
+                    await vkBridge.send('VKWebAppShare', { 
+                        link: shareLink,
+                        text: message
+                    });
+                } catch(e) {
+                    showToast('Ошибка при отправке');
+                    console.error("Share error:", e);
                 }
             });
 
