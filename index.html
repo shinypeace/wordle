@@ -49,7 +49,7 @@
         #app { width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
 
-        #main-menu { 
+        #main-menu {
             display: flex;
             flex-direction: column;
             justify-content: space-around; /* Изменено для равномерного распределения */
@@ -69,10 +69,8 @@
         .menu-button:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .friend-mode-button { background-color: var(--color-correct); color: var(--color-text-light); }
         .stats-button { background-color: var(--color-present); color: var(--color-text-light); }
-        
+       
         .theme-switcher {
-            /* position: absolute; - Убрано */
-            /* bottom: 30px; - Убрано */
             display: flex;
             align-items: center;
             gap: 10px;
@@ -90,7 +88,7 @@
         .input-wrapper { position: relative; width: 100%; }
         .paste-button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background-color: var(--key-bg); border: none; border-radius: 6px; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--key-text-color); }
         .code-display { padding: 20px; background-color: var(--bg-color); border: 2px dashed var(--tile-border-color); border-radius: 8px; font-family: monospace; font-size: 1.2rem; font-weight: 700; word-break: break-all; margin-bottom: 10px; }
-        
+       
         #game-screen { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 5px; position: relative; z-index: 10; width: 100%; flex-shrink: 0; }
         header h2 { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; font-weight: 800; letter-spacing: 0.05em; text-align: center; pointer-events: none; }
@@ -129,7 +127,7 @@
             .key { height: 42px; gap: 4px; }
             .keyboard-row { gap: 4px; }
         }
-        
+       
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--modal-bg); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
         .modal-content { background-color: var(--tile-bg); padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px var(--shadow-color); text-align: center; width: 100%; max-width: 520px; animation: fadeIn 0.3s ease; max-height: 90vh; display: flex; flex-direction: column; }
         .modal-body { flex-grow: 1; overflow-y: auto; text-align: left; padding-right: 10px; margin-right: -10px; }
@@ -176,7 +174,7 @@
 <body>
 
     <div id="app">
-        
+       
         <div id="main-menu">
             <h1>СЛОВЛИ</h1>
             <p>Выберите длину слова</p>
@@ -204,24 +202,20 @@
                 <h2>Загадайте слово</h2>
                 <p>Введите слово от 4 до 11 букв</p>
                 <input type="text" id="word-to-create-input" class="input-field" maxlength="11" placeholder="Ваше слово...">
-                <button id="generate-code-btn" class="menu-button primary">Сгенерировать код</button>
+                <button id="generate-code-btn" class="menu-button primary">Создать ссылку</button>
                  <button id="back-to-friend-menu-btn-1" class="menu-button">Назад</button>
             </div>
             <div id="display-code-view" class="friend-screen-container hidden">
-                <h2>Ваш код готов!</h2>
-                <p>Отправьте этот код другу:</p>
-                <div id="generated-code-display" class="code-display"></div>
-                <button id="copy-code-btn" class="menu-button primary">Копировать</button>
+                <h2>Ссылка готова!</h2>
+                <p>Нажмите, чтобы отправить ссылку другу:</p>
+                <!-- Этот элемент теперь используется для хранения кода, но скрыт от пользователя -->
+                <div id="generated-code-display" class="code-display hidden"></div>
+                <button id="send-to-friend-btn" class="menu-button primary">Отправить другу</button>
                 <button id="back-to-friend-menu-btn-2" class="menu-button">Назад</button>
             </div>
             <div id="guess-word-view" class="friend-screen-container hidden">
                 <h2>Отгадать слово</h2>
-                <p>Вставьте код, который вам прислали</p>
-                <div class="input-wrapper">
-                    <input type="text" id="code-to-guess-input" class="input-field" placeholder="Код от друга...">
-                    <button class="paste-button" id="paste-code-btn">📋</button>
-                </div>
-                <button id="start-guess-btn" class="menu-button primary">Начать игру</button>
+                <p>Этот раздел больше не используется. Игры от друзей открываются автоматически по ссылке.</p>
                 <button id="back-to-friend-menu-btn-3" class="menu-button">Назад</button>
             </div>
         </div>
@@ -252,7 +246,7 @@
                 </div>
             </div>
         </div>
-        
+       
         <div id="endgame-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <div class="modal-body" style="text-align: center;">
@@ -274,8 +268,8 @@
                     </div>
                 </div>
                 <div class="modal-buttons">
-                    <button id="share-button" class="modal-button primary">Поделиться</button>
-                    <button id="new-game-button" class="modal-button secondary">Играть снова</button>
+                    <!-- Кнопка Поделиться удалена, вместо нее используется кнопка В главное меню -->
+                    <button id="new-game-button" class="modal-button primary">Играть снова</button>
                     <button id="back-to-menu-from-endgame-btn" class="modal-button secondary">В главное меню</button>
                 </div>
             </div>
@@ -317,7 +311,7 @@
                 </div>
             </div>
         </div>
-        
+       
         <div id="toast"></div>
 
     </div>
@@ -325,7 +319,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
-        const APP_ID = 53861990; 
+        const APP_ID = 53861990;
         let vkUserId = null;
 
 
@@ -3810,7 +3804,6 @@
         const endgameModal = document.getElementById('endgame-modal');
         const endgameTitle = document.getElementById('endgame-title');
         const secretWordDisplay = document.getElementById('secret-word-display');
-        const shareButton = document.getElementById('share-button');
         const newGameButton = document.getElementById('new-game-button');
         const statsContainer = document.getElementById('stats-container');
         const backToMenuFromEndgameBtn = document.getElementById('back-to-menu-from-endgame-btn');
@@ -3832,16 +3825,13 @@
         const generateCodeBtn = document.getElementById('generate-code-btn');
         const displayCodeView = document.getElementById('display-code-view');
         const generatedCodeDisplay = document.getElementById('generated-code-display');
-        const copyCodeBtn = document.getElementById('copy-code-btn');
+        const sendToFriendBtn = document.getElementById('send-to-friend-btn');
         const guessWordView = document.getElementById('guess-word-view');
-        const codeToGuessInput = document.getElementById('code-to-guess-input');
-        const startGuessBtn = document.getElementById('start-guess-btn');
-        const pasteCodeBtn = document.getElementById('paste-code-btn');
-
+        
         document.getElementById('back-to-friend-menu-btn-1').addEventListener('click', () => showFriendScreen('menu'));
         document.getElementById('back-to-friend-menu-btn-2').addEventListener('click', () => showFriendScreen('menu'));
         document.getElementById('back-to-friend-menu-btn-3').addEventListener('click', () => showFriendScreen('menu'));
-        
+       
         let wordLength = 5;
         const maxGuesses = 6;
         let currentRowIndex = 0;
@@ -3851,11 +3841,28 @@
         let isFriendMode = false;
         let gamesPlayedSinceAd = 0;
         let boardState = [];
-        let shareableResult = [];
         let stats = {};
         const russianAlphabet = [ ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'], ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'], ['enter', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', 'backspace'] ];
         let correctLetterPositions = [];
 
+        // Новая функция для проверки URL-фрагмента при запуске
+        function checkUrlFragmentAndStartGame() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                // Немедленно очищаем хэш, чтобы избежать повторного запуска при перезагрузке
+                history.replaceState(null, '', window.location.pathname + window.location.search);
+                
+                const decodedWord = decodeWord(hash);
+                // Проверяем, что слово корректно и состоит из русских букв нужной длины
+                if (decodedWord && /^[а-яё]{4,11}$/.test(decodedWord)) {
+                    // Если все в порядке, запускаем игру в режиме "Слово другу"
+                    startGame(decodedWord.length, decodedWord);
+                    return true; // Возвращаем true, чтобы init() знал, что игра запущена
+                }
+            }
+            return false; // Игра из фрагмента не была запущена
+        }
+        
         async function init() {
             try {
                 await vkBridge.send('VKWebAppInit');
@@ -3865,12 +3872,22 @@
                 vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
                 localStorage.setItem('guestUserId', vkUserId);
             }
+
+            // Сначала проверяем, есть ли в ссылке загаданное слово от друга
+            const gameStartedFromFragment = checkUrlFragmentAndStartGame();
+
             loadTheme();
             await loadStats();
-            createMainMenu();
+            
+            // Показываем главное меню, только если игра не была запущена по ссылке
+            if (!gameStartedFromFragment) {
+                createMainMenu();
+                showMainMenu();
+            }
+            
             addEventListeners();
-            showMainMenu();
         }
+
 
         async function saveStats() {
             const storageKey = `wordle_stats_${vkUserId}`;
@@ -3881,7 +3898,7 @@
                 localStorage.setItem(storageKey, dataToSave);
             }
         }
-        
+       
         async function loadStats() {
             const storageKey = `wordle_stats_${vkUserId}`;
             try {
@@ -3906,39 +3923,30 @@
             friendGameScreen.classList.add('hidden');
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
         }
-        
-function getPluralizedLetters(number) {
-    const num = parseInt(number, 10);
-    // Для чисел, заканчивающихся на 1, но не 11 (например, 1, 21, 31)
-    if (num % 10 === 1 && num % 100 !== 11) {
-        return 'буква';
-    }
-    // Для чисел, заканчивающихся на 2, 3, 4, но не 12, 13, 14
-    if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) {
-        return 'буквы';
-    }
-    // Для всех остальных случаев
-    return 'букв';
-}
+       
+        function getPluralizedLetters(number) {
+            const num = parseInt(number, 10);
+            if (num % 10 === 1 && num % 100 !== 11) { return 'буква'; }
+            if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) { return 'буквы'; }
+            return 'букв';
+        }
 
-function createMainMenu() {
-    lengthSelector.innerHTML = '';
-    const availableLengths = Object.keys(guessableWordsData.words);
-    availableLengths.forEach(len => {
-        const button = document.createElement('button');
-        button.className = 'menu-button';
-        button.textContent = `${len} ${getPluralizedLetters(len)}`;
-        button.dataset.length = len;
-        lengthSelector.appendChild(button);
-    });
-}
-
-
+        function createMainMenu() {
+            lengthSelector.innerHTML = '';
+            const availableLengths = Object.keys(guessableWordsData.words);
+            availableLengths.forEach(len => {
+                const button = document.createElement('button');
+                button.className = 'menu-button';
+                button.textContent = `${len} ${getPluralizedLetters(len)}`;
+                button.dataset.length = len;
+                lengthSelector.appendChild(button);
+            });
+        }
 
         function startGame(length, customWord = null) {
             wordLength = parseInt(length);
             isFriendMode = customWord !== null;
-            if (customWord) { secretWord = customWord.toLowerCase(); } 
+            if (customWord) { secretWord = customWord.toLowerCase(); }
             else {
                 if (!guessableWordsData.words[wordLength] || guessableWordsData.words[wordLength].length === 0) {
                     showToast(`Нет слов для загадывания длины ${wordLength}`);
@@ -3951,7 +3959,6 @@ function createMainMenu() {
             isGameOver = false;
             isProcessing = false;
             boardState = Array(maxGuesses).fill(null).map(() => Array(wordLength).fill(''));
-            shareableResult = [];
             correctLetterPositions = Array(wordLength).fill(null);
             createKeyboard();
             gameTitle.textContent = isFriendMode ? 'СЛОВО ОТ ДРУГА' : `СЛОВО ИЗ ${wordLength} БУКВ`;
@@ -4015,8 +4022,8 @@ function createMainMenu() {
         function handleKeyPress(key) {
             if (isGameOver || isProcessing) return;
             key = key.toLowerCase();
-            if (key === 'enter') { submitGuess(); } 
-            else if (key === 'backspace' || key === 'delete') { deleteLetter(); } 
+            if (key === 'enter') { submitGuess(); }
+            else if (key === 'backspace' || key === 'delete') { deleteLetter(); }
             else if (/^[а-яё]$/.test(key)) { addLetter(key === 'ё' ? 'е' : key); }
         }
 
@@ -4058,8 +4065,8 @@ function createMainMenu() {
             const result = checkGuess(guess);
             await animateGuess(result);
             updateKeyboard(result);
-            if (guess === secretWord) { await winGame(); } 
-            else if (currentRowIndex === maxGuesses - 1) { await loseGame(); } 
+            if (guess === secretWord) { await winGame(); }
+            else if (currentRowIndex === maxGuesses - 1) { await loseGame(); }
             else { moveToNextRow(); }
             isProcessing = false;
         }
@@ -4081,10 +4088,9 @@ function createMainMenu() {
                     if (letterIndex !== -1) { result[i] = 'present'; secretLetters[letterIndex] = null; }
                 }
             }
-            shareableResult.push(result);
             return result;
         }
-        
+       
         function moveToNextRow() { currentRowIndex++; projectPlaceholders(); }
 
         function projectPlaceholders() {
@@ -4100,7 +4106,6 @@ function createMainMenu() {
 
         function showFriendScreen(view) {
             wordToCreateInput.value = '';
-            codeToGuessInput.value = '';
             mainMenu.classList.add('hidden');
             gameScreen.classList.add('hidden');
             friendGameScreen.classList.remove('hidden');
@@ -4120,16 +4125,12 @@ function createMainMenu() {
             if (word.length > 11) { showToast('Слово слишком длинное'); return; }
             if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
             const code = encodeWord(word);
-            if (code) { generatedCodeDisplay.textContent = code; showFriendScreen('display'); } 
-            else { showToast('Ошибка при создании кода'); }
-        }
-
-        function handleStartGuess() {
-            const code = codeToGuessInput.value.trim();
-            if (!code) { showToast('Введите код'); return; }
-            const decodedWord = decodeWord(code);
-            if (decodedWord) { startGame(decodedWord.length, decodedWord); } 
-            else { showToast('Неверный код'); }
+            if (code) { 
+                generatedCodeDisplay.textContent = code; 
+                showFriendScreen('display'); 
+            } else { 
+                showToast('Ошибка при создании ссылки'); 
+            }
         }
 
         async function handleHint() {
@@ -4187,7 +4188,7 @@ function createMainMenu() {
                 }, wordLength * 100 + 300);
             });
         }
-        
+       
         async function loseGame() {
             isGameOver = true;
             await updateStats(false);
@@ -4200,17 +4201,23 @@ function createMainMenu() {
                 }, wordLength * 100 + 300);
             });
         }
-        
+       
+        // Обновленная функция для отображения модального окна в конце игры
         function showEndGameModal() {
             secretWordDisplay.textContent = secretWord.toUpperCase();
+            
+            // Кнопка "В главное меню" теперь всегда видна в конце игры
+            backToMenuFromEndgameBtn.classList.remove('hidden');
+
             if (isFriendMode) {
+                // В режиме "Слово другу" скрываем статистику и кнопку "Играть снова"
                 statsContainer.classList.add('hidden');
                 newGameButton.classList.add('hidden');
-                backToMenuFromEndgameBtn.classList.remove('hidden');
             } else {
+                // В обычном режиме показываем статистику и кнопку "Играть снова"
                 statsContainer.classList.remove('hidden');
                 newGameButton.classList.remove('hidden');
-                backToMenuFromEndgameBtn.classList.add('hidden');
+                
                 const currentStats = stats[wordLength] || { played: 0, wins: 0, currentStreak: 0 };
                 document.getElementById('stat-played').textContent = currentStats.played;
                 const winRate = currentStats.played > 0 ? Math.round((currentStats.wins / currentStats.played) * 100) : 0;
@@ -4219,6 +4226,7 @@ function createMainMenu() {
             }
             endgameModal.classList.remove('hidden');
         }
+
 
         function getTile(row, col) { return gameBoard.children[row].children[col]; }
         function shakeRow(rowIndex) { const row = gameBoard.children[rowIndex]; row.classList.add('shake'); row.addEventListener('animationend', () => row.classList.remove('shake'), { once: true }); }
@@ -4241,12 +4249,12 @@ function createMainMenu() {
                 if (!key) return;
                 const currentStatus = key.classList.contains('correct') ? 'correct' : key.classList.contains('present') ? 'present' : 'absent';
                 const newStatus = result[index];
-                if (newStatus === 'correct') { key.className = 'key correct'; } 
-                else if (newStatus === 'present' && currentStatus !== 'correct') { key.className = 'key present'; } 
+                if (newStatus === 'correct') { key.className = 'key correct'; }
+                else if (newStatus === 'present' && currentStatus !== 'correct') { key.className = 'key present'; }
                 else if (newStatus === 'absent' && currentStatus !== 'correct' && currentStatus !== 'present') { key.className = 'key absent'; }
             });
         }
-        
+       
         function showToast(message) {
             toast.textContent = message;
             toast.classList.add('toast-show');
@@ -4254,16 +4262,7 @@ function createMainMenu() {
                 toast.classList.remove('toast-show');
             }, { once: true });
         }
-        
-        function createShareableText() {
-            const attemptCount = currentRowIndex + 1;
-            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇`;
-            const emojiMap = { 'correct': '🟩', 'present': '🟨', 'absent': '⬜' };
-            if (body.dataset.theme === 'dark') { emojiMap['absent'] = '⬛'; }
-            const grid = shareableResult.map(row => row.map(status => emojiMap[status]).join('')).join('\n');
-            return `${text}\n\n${grid}`;
-        }
-        
+       
         function toggleTheme() {
             const newTheme = body.dataset.theme === 'light' ? 'dark' : 'light';
             body.dataset.theme = newTheme;
@@ -4274,13 +4273,13 @@ function createMainMenu() {
             const savedTheme = localStorage.getItem('wordle-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             body.dataset.theme = savedTheme;
         }
-        
+       
         async function updateStats(didWin) {
             if(isFriendMode) return;
             if (!stats[wordLength]) { stats[wordLength] = { played: 0, wins: 0, currentStreak: 0 }; }
             const modeStats = stats[wordLength];
             modeStats.played++;
-            if (didWin) { modeStats.wins++; modeStats.currentStreak++; } 
+            if (didWin) { modeStats.wins++; modeStats.currentStreak++; }
             else { modeStats.currentStreak = 0; }
             await saveStats();
         }
@@ -4328,11 +4327,23 @@ function createMainMenu() {
             closeRulesBtn.addEventListener('click', () => { rulesModal.classList.add('hidden'); });
             backToMainMenuBtn.addEventListener('click', () => { showMainMenu(); });
             createWordBtn.addEventListener('click', () => showFriendScreen('create'));
-            guessWordBtn.addEventListener('click', () => showFriendScreen('guess'));
+            // Кнопка "Отгадать по коду" теперь скрыта, т.к. вход происходит по ссылке
+            guessWordBtn.classList.add('hidden');
             generateCodeBtn.addEventListener('click', handleGenerateCode);
-            copyCodeBtn.addEventListener('click', () => { navigator.clipboard.writeText(generatedCodeDisplay.textContent).then(() => showToast('Код скопирован!')); });
-            pasteCodeBtn.addEventListener('click', async () => { try { const text = await navigator.clipboard.readText(); codeToGuessInput.value = text; } catch(e) { showToast('Не удалось вставить'); } });
-            startGuessBtn.addEventListener('click', handleStartGuess);
+
+            // Обновленный обработчик для отправки ссылки другу
+            sendToFriendBtn.addEventListener('click', async () => {
+                const code = generatedCodeDisplay.textContent;
+                if (!code) return;
+                try {
+                    const shareLink = `https://vk.com/app${APP_ID}#${code}`;
+                    await vkBridge.send('VKWebAppShare', { link: shareLink });
+                } catch(e) {
+                    showToast('Ошибка при отправке');
+                    console.error("Share error:", e);
+                }
+            });
+
             themeSwitcher.addEventListener('click', toggleTheme);
             let activeKey = null;
             const handlePressStart = (e) => { if (e.target.closest('.key')) { activeKey = e.target.closest('.key'); activeKey.classList.add('pressed'); } };
@@ -4357,17 +4368,10 @@ function createMainMenu() {
             mainMenuButtonFromPause.addEventListener('click', () => { pauseModal.classList.add('hidden'); showMainMenu(); });
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
-            shareButton.addEventListener('click', async () => {
-                const shareText = createShareableText();
-                try {
-                    await navigator.clipboard.writeText(shareText);
-                    showToast('Результат скопирован!');
-                    await vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` });
-                } catch(e) { showToast('Ошибка при отправке'); }
-            });
+            
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
-        
+       
         init();
     });
     </script>
