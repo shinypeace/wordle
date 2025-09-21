@@ -318,6 +318,8 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
+        // ИЗМЕНЕНИЕ 1: Сразу сохраняем хэш из URL при загрузке страницы.
+        const initialHash = window.location.hash;
 
         const APP_ID = 53861990; // <--- ID вашего приложения
         let vkUserId = null;
@@ -3827,7 +3829,7 @@
         const generatedCodeDisplay = document.getElementById('generated-code-display');
         const sendToFriendBtn = document.getElementById('send-to-friend-btn');
         const guessWordView = document.getElementById('guess-word-view');
-        
+       
         document.getElementById('back-to-friend-menu-btn-1').addEventListener('click', () => showFriendScreen('menu'));
         document.getElementById('back-to-friend-menu-btn-2').addEventListener('click', () => showFriendScreen('menu'));
         document.getElementById('back-to-friend-menu-btn-3').addEventListener('click', () => showFriendScreen('menu'));
@@ -3845,14 +3847,14 @@
         const russianAlphabet = [ ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'], ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'], ['enter', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', 'backspace'] ];
         let correctLetterPositions = [];
 
-        // Новая функция для проверки URL-фрагмента при запуске
-        function checkUrlFragmentAndStartGame() {
-            const hash = window.location.hash.substring(1);
-            if (hash) {
+        // ИЗМЕНЕНИЕ 2: Функция теперь принимает хэш как аргумент, а не читает его из window.location.
+        function checkUrlFragmentAndStartGame(hash) {
+            const encodedWord = hash.substring(1);
+            if (encodedWord) {
                 // Немедленно очищаем хэш, чтобы избежать повторного запуска при перезагрузке
                 history.replaceState(null, '', window.location.pathname + window.location.search);
-                
-                const decodedWord = decodeWord(hash);
+               
+                const decodedWord = decodeWord(encodedWord);
                 // Проверяем, что слово корректно и состоит из русских букв нужной длины
                 if (decodedWord && /^[а-яё]{4,11}$/.test(decodedWord)) {
                     // Если все в порядке, запускаем игру в режиме "Слово другу"
@@ -3862,7 +3864,7 @@
             }
             return false; // Игра из фрагмента не была запущена
         }
-        
+       
         async function init() {
             try {
                 await vkBridge.send('VKWebAppInit');
@@ -3875,18 +3877,17 @@
 
             loadTheme();
             await loadStats();
-            
-            // ИСПРАВЛЕНО: Создаем главное меню в любом случае, чтобы оно было готово к показу
+           
             createMainMenu();
-            
-            // Сначала проверяем, есть ли в ссылке загаданное слово от друга
-            const gameStartedFromFragment = checkUrlFragmentAndStartGame();
-            
+           
+            // ИЗМЕНЕНИЕ 3: Передаем в функцию сохраненный ранее хэш.
+            const gameStartedFromFragment = checkUrlFragmentAndStartGame(initialHash);
+           
             // Показываем главное меню, только если игра не была запущена по ссылке
             if (!gameStartedFromFragment) {
                 showMainMenu();
             }
-            
+           
             addEventListeners();
         }
 
@@ -4127,11 +4128,11 @@
             if (word.length > 11) { showToast('Слово слишком длинное'); return; }
             if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
             const code = encodeWord(word);
-            if (code) { 
-                generatedCodeDisplay.textContent = code; 
-                showFriendScreen('display'); 
-            } else { 
-                showToast('Ошибка при создании ссылки'); 
+            if (code) {
+                generatedCodeDisplay.textContent = code;
+                showFriendScreen('display');
+            } else {
+                showToast('Ошибка при создании ссылки');
             }
         }
 
@@ -4207,7 +4208,7 @@
         // Обновленная функция для отображения модального окна в конце игры
         function showEndGameModal() {
             secretWordDisplay.textContent = secretWord.toUpperCase();
-            
+           
             // Кнопка "В главное меню" теперь всегда видна в конце игры
             backToMenuFromEndgameBtn.classList.remove('hidden');
 
@@ -4219,7 +4220,7 @@
                 // В обычном режиме показываем статистику и кнопку "Играть снова"
                 statsContainer.classList.remove('hidden');
                 newGameButton.classList.remove('hidden');
-                
+               
                 const currentStats = stats[wordLength] || { played: 0, wins: 0, currentStreak: 0 };
                 document.getElementById('stat-played').textContent = currentStats.played;
                 const winRate = currentStats.played > 0 ? Math.round((currentStats.wins / currentStats.played) * 100) : 0;
@@ -4338,13 +4339,9 @@
                 if (!code) return;
                 const shareLink = `https://vk.com/app${APP_ID}#${code}`;
                 const message = 'Я загадал для тебя слово! Попробуй отгадать его в «Словли».';
-                
+               
                 try {
-                    // ИСПРАВЛЕНО: Добавлен параметр 'text' напрямую в VKWebAppShare по вашему указанию.
-                    // Важное примечание: Этот параметр не задокументирован в официальном руководстве VK Bridge
-                    // для отправки в личные сообщения и его работа не гарантируется.
-                    // Если текст не будет добавляться, значит, ВКонтакте больше не поддерживает эту возможность.
-                    await vkBridge.send('VKWebAppShare', { 
+                    await vkBridge.send('VKWebAppShare', {
                         link: shareLink,
                         text: message
                     });
@@ -4378,7 +4375,7 @@
             mainMenuButtonFromPause.addEventListener('click', () => { pauseModal.classList.add('hidden'); showMainMenu(); });
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
-            
+           
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
        
