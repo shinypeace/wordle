@@ -207,10 +207,10 @@
             </div>
             <div id="display-code-view" class="friend-screen-container hidden">
                 <h2>Ссылка готова!</h2>
-                <p>Поделитесь этой ссылкой с другом:</p>
+                <p>Нажмите, чтобы отправить ссылку другу:</p>
                 <!-- Этот элемент теперь используется для хранения кода, но скрыт от пользователя -->
                 <div id="generated-code-display" class="code-display hidden"></div>
-                <button id="send-to-friend-btn" class="menu-button primary">Поделиться ссылкой</button>
+                <button id="send-to-friend-btn" class="menu-button primary">Отправить другу</button>
                 <button id="back-to-friend-menu-btn-2" class="menu-button">Назад</button>
             </div>
             <div id="guess-word-view" class="friend-screen-container hidden">
@@ -319,7 +319,7 @@
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
 
-        const APP_ID = 54138999; // <--- ID вашего приложения
+        const APP_ID = 53861990;
         let vkUserId = null;
 
 
@@ -3873,17 +3873,15 @@
                 localStorage.setItem('guestUserId', vkUserId);
             }
 
+            // Сначала проверяем, есть ли в ссылке загаданное слово от друга
+            const gameStartedFromFragment = checkUrlFragmentAndStartGame();
+
             loadTheme();
             await loadStats();
             
-            // ИСПРАВЛЕНО: Создаем главное меню в любом случае, чтобы оно было готово к показу
-            createMainMenu();
-            
-            // Сначала проверяем, есть ли в ссылке загаданное слово от друга
-            const gameStartedFromFragment = checkUrlFragmentAndStartGame();
-            
             // Показываем главное меню, только если игра не была запущена по ссылке
             if (!gameStartedFromFragment) {
+                createMainMenu();
                 showMainMenu();
             }
             
@@ -4333,21 +4331,13 @@
             guessWordBtn.classList.add('hidden');
             generateCodeBtn.addEventListener('click', handleGenerateCode);
 
+            // Обновленный обработчик для отправки ссылки другу
             sendToFriendBtn.addEventListener('click', async () => {
                 const code = generatedCodeDisplay.textContent;
                 if (!code) return;
-                const shareLink = `https://vk.com/app${APP_ID}#${code}`;
-                const message = 'Я загадал для тебя слово! Попробуй отгадать его в «Словли».';
-                
                 try {
-                    // ИСПРАВЛЕНО: Добавлен параметр 'text' напрямую в VKWebAppShare по вашему указанию.
-                    // Важное примечание: Этот параметр не задокументирован в официальном руководстве VK Bridge
-                    // для отправки в личные сообщения и его работа не гарантируется.
-                    // Если текст не будет добавляться, значит, ВКонтакте больше не поддерживает эту возможность.
-                    await vkBridge.send('VKWebAppShare', { 
-                        link: shareLink,
-                        text: message
-                    });
+                    const shareLink = `https://vk.com/app${APP_ID}#${code}`;
+                    await vkBridge.send('VKWebAppShare', { link: shareLink });
                 } catch(e) {
                     showToast('Ошибка при отправке');
                     console.error("Share error:", e);
