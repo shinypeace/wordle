@@ -75,7 +75,7 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
-            margin-top: 10px; /* Добавлен небольшой отступ сверху */
+            margin-top: 10px; 
         }
         .theme-toggle { width: 50px; height: 26px; background-color: var(--key-bg); border-radius: 13px; position: relative; transition: background-color 0.3s; }
         .theme-toggle::before { content: ''; position: absolute; width: 20px; height: 20px; background-color: var(--bg-color); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; }
@@ -85,9 +85,6 @@
         .friend-screen-container h2 { font-size: 1.8rem; margin-bottom: 10px; }
         .input-field { width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 8px; border: 2px solid var(--tile-border-color); background-color: var(--tile-bg); color: var(--text-color); text-align: center; font-family: var(--font-family); }
         .input-field:focus { outline: none; border-color: var(--color-correct); }
-        .input-wrapper { position: relative; width: 100%; }
-        .paste-button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background-color: var(--key-bg); border: none; border-radius: 6px; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--key-text-color); }
-        .code-display { padding: 20px; background-color: var(--bg-color); border: 2px dashed var(--tile-border-color); border-radius: 8px; font-family: monospace; font-size: 1.2rem; font-weight: 700; word-break: break-all; margin-bottom: 10px; }
        
         #game-screen { width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         header { display: flex; justify-content: space-between; align-items: center; padding: 5px; position: relative; z-index: 10; width: 100%; flex-shrink: 0; }
@@ -192,31 +189,12 @@
         </div>
 
         <div id="friend-game-screen" class="hidden">
-            <div id="friend-menu" class="friend-screen-container">
-                <h2>Слово другу</h2>
-                <button id="create-word-btn" class="menu-button primary">Загадать слово</button>
-                <button id="guess-word-btn" class="menu-button secondary">Отгадать по коду</button>
-                <button id="back-to-main-menu-btn" class="menu-button">Назад</button>
-            </div>
-            <div id="create-word-view" class="friend-screen-container hidden">
+            <div class="friend-screen-container">
                 <h2>Загадайте слово</h2>
                 <p>Введите слово от 4 до 11 букв</p>
-                <input type="text" id="word-to-create-input" class="input-field" maxlength="11" placeholder="Ваше слово...">
-                <button id="generate-code-btn" class="menu-button primary">Создать ссылку</button>
-                 <button id="back-to-friend-menu-btn-1" class="menu-button">Назад</button>
-            </div>
-            <div id="display-code-view" class="friend-screen-container hidden">
-                <h2>Ссылка готова!</h2>
-                <p>Поделитесь этой ссылкой с другом:</p>
-                <!-- Этот элемент теперь используется для хранения кода, но скрыт от пользователя -->
-                <div id="generated-code-display" class="code-display hidden"></div>
-                <button id="send-to-friend-btn" class="menu-button primary">Поделиться ссылкой</button>
-                <button id="back-to-friend-menu-btn-2" class="menu-button">Назад</button>
-            </div>
-            <div id="guess-word-view" class="friend-screen-container hidden">
-                <h2>Отгадать слово</h2>
-                <p>Этот раздел больше не используется. Игры от друзей открываются автоматически по ссылке.</p>
-                <button id="back-to-friend-menu-btn-3" class="menu-button">Назад</button>
+                <input type="text" id="word-to-share-input" class="input-field" maxlength="11" placeholder="Ваше слово...">
+                <button id="share-word-btn" class="menu-button primary">Поделиться словом</button>
+                 <button id="back-to-main-menu-btn" class="menu-button">Назад</button>
             </div>
         </div>
 
@@ -268,8 +246,8 @@
                     </div>
                 </div>
                 <div class="modal-buttons">
-                    <!-- Кнопка Поделиться удалена, вместо нее используется кнопка В главное меню -->
-                    <button id="new-game-button" class="modal-button primary">Играть снова</button>
+                    <button id="share-button" class="modal-button primary">Поделиться</button>
+                    <button id="new-game-button" class="modal-button secondary">Играть снова</button>
                     <button id="back-to-menu-from-endgame-btn" class="modal-button secondary">В главное меню</button>
                 </div>
             </div>
@@ -318,10 +296,8 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        // ИЗМЕНЕНИЕ 1: Сразу сохраняем хэш из URL при загрузке страницы.
-        const initialHash = window.location.hash;
 
-        const APP_ID = 53861990; // <--- ID вашего приложения
+        const APP_ID = 53861990; // Ваш ID приложения
         let vkUserId = null;
 
 
@@ -3806,6 +3782,7 @@
         const endgameModal = document.getElementById('endgame-modal');
         const endgameTitle = document.getElementById('endgame-title');
         const secretWordDisplay = document.getElementById('secret-word-display');
+        const shareButton = document.getElementById('share-button');
         const newGameButton = document.getElementById('new-game-button');
         const statsContainer = document.getElementById('stats-container');
         const backToMenuFromEndgameBtn = document.getElementById('back-to-menu-from-endgame-btn');
@@ -3818,21 +3795,9 @@
         const rulesButton = document.getElementById('rules-button');
         const rulesModal = document.getElementById('rules-modal');
         const closeRulesBtn = document.getElementById('close-rules-btn');
-        const friendMenu = document.getElementById('friend-menu');
-        const createWordBtn = document.getElementById('create-word-btn');
-        const guessWordBtn = document.getElementById('guess-word-btn');
         const backToMainMenuBtn = document.getElementById('back-to-main-menu-btn');
-        const createWordView = document.getElementById('create-word-view');
-        const wordToCreateInput = document.getElementById('word-to-create-input');
-        const generateCodeBtn = document.getElementById('generate-code-btn');
-        const displayCodeView = document.getElementById('display-code-view');
-        const generatedCodeDisplay = document.getElementById('generated-code-display');
-        const sendToFriendBtn = document.getElementById('send-to-friend-btn');
-        const guessWordView = document.getElementById('guess-word-view');
-       
-        document.getElementById('back-to-friend-menu-btn-1').addEventListener('click', () => showFriendScreen('menu'));
-        document.getElementById('back-to-friend-menu-btn-2').addEventListener('click', () => showFriendScreen('menu'));
-        document.getElementById('back-to-friend-menu-btn-3').addEventListener('click', () => showFriendScreen('menu'));
+        const wordToShareInput = document.getElementById('word-to-share-input');
+        const shareWordBtn = document.getElementById('share-word-btn');
        
         let wordLength = 5;
         const maxGuesses = 6;
@@ -3843,28 +3808,11 @@
         let isFriendMode = false;
         let gamesPlayedSinceAd = 0;
         let boardState = [];
+        let shareableResult = [];
         let stats = {};
         const russianAlphabet = [ ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'], ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'], ['enter', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', 'backspace'] ];
         let correctLetterPositions = [];
 
-        // ИЗМЕНЕНИЕ 2: Функция теперь принимает хэш как аргумент, а не читает его из window.location.
-        function checkUrlFragmentAndStartGame(hash) {
-            const encodedWord = hash.substring(1);
-            if (encodedWord) {
-                // Немедленно очищаем хэш, чтобы избежать повторного запуска при перезагрузке
-                history.replaceState(null, '', window.location.pathname + window.location.search);
-               
-                const decodedWord = decodeWord(encodedWord);
-                // Проверяем, что слово корректно и состоит из русских букв нужной длины
-                if (decodedWord && /^[а-яё]{4,11}$/.test(decodedWord)) {
-                    // Если все в порядке, запускаем игру в режиме "Слово другу"
-                    startGame(decodedWord.length, decodedWord);
-                    return true; // Возвращаем true, чтобы init() знал, что игра запущена
-                }
-            }
-            return false; // Игра из фрагмента не была запущена
-        }
-       
         async function init() {
             try {
                 await vkBridge.send('VKWebAppInit');
@@ -3874,21 +3822,38 @@
                 vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
                 localStorage.setItem('guestUserId', vkUserId);
             }
-
             loadTheme();
             await loadStats();
-           
             createMainMenu();
-           
-            // ИЗМЕНЕНИЕ 3: Передаем в функцию сохраненный ранее хэш.
-            const gameStartedFromFragment = checkUrlFragmentAndStartGame(initialHash);
-           
-            // Показываем главное меню, только если игра не была запущена по ссылке
-            if (!gameStartedFromFragment) {
+            addEventListeners();
+            
+            // NEW: Check for friend's word in URL hash on startup
+            if (!handleFriendWordFromURL()) {
                 showMainMenu();
             }
-           
-            addEventListeners();
+        }
+
+        function handleFriendWordFromURL() {
+            try {
+                const hash = window.location.hash.substring(1);
+                if (!hash) return false;
+
+                const params = new URLSearchParams(hash);
+                const friendWordEncoded = params.get('word');
+
+                if (friendWordEncoded) {
+                    const decodedWord = decodeWord(friendWordEncoded);
+                    if (decodedWord && decodedWord.length >= 4 && decodedWord.length <= 11) {
+                        // Clear hash from URL to prevent re-triggering
+                        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                        startGame(decodedWord.length, decodedWord);
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error("Error parsing friend word from URL:", error);
+            }
+            return false;
         }
 
 
@@ -3926,11 +3891,18 @@
             friendGameScreen.classList.add('hidden');
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
         }
+
+        function showFriendScreen() {
+            wordToShareInput.value = '';
+            mainMenu.classList.add('hidden');
+            gameScreen.classList.add('hidden');
+            friendGameScreen.classList.remove('hidden');
+        }
        
         function getPluralizedLetters(number) {
             const num = parseInt(number, 10);
-            if (num % 10 === 1 && num % 100 !== 11) { return 'буква'; }
-            if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) { return 'буквы'; }
+            if (num % 10 === 1 && num % 100 !== 11) return 'буква';
+            if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'буквы';
             return 'букв';
         }
 
@@ -3962,6 +3934,7 @@
             isGameOver = false;
             isProcessing = false;
             boardState = Array(maxGuesses).fill(null).map(() => Array(wordLength).fill(''));
+            shareableResult = [];
             correctLetterPositions = Array(wordLength).fill(null);
             createKeyboard();
             gameTitle.textContent = isFriendMode ? 'СЛОВО ОТ ДРУГА' : `СЛОВО ИЗ ${wordLength} БУКВ`;
@@ -4091,6 +4064,7 @@
                     if (letterIndex !== -1) { result[i] = 'present'; secretLetters[letterIndex] = null; }
                 }
             }
+            shareableResult.push(result);
             return result;
         }
        
@@ -4107,32 +4081,32 @@
             }
         }
 
-        function showFriendScreen(view) {
-            wordToCreateInput.value = '';
-            mainMenu.classList.add('hidden');
-            gameScreen.classList.add('hidden');
-            friendGameScreen.classList.remove('hidden');
-            friendMenu.classList.add('hidden');
-            createWordView.classList.add('hidden');
-            displayCodeView.classList.add('hidden');
-            guessWordView.classList.add('hidden');
-            if (view === 'menu') friendMenu.classList.remove('hidden');
-            if (view === 'create') createWordView.classList.remove('hidden');
-            if (view === 'display') displayCodeView.classList.remove('hidden');
-            if (view === 'guess') guessWordView.classList.remove('hidden');
-        }
-
-        function handleGenerateCode() {
-            let word = wordToCreateInput.value.trim().toLowerCase();
+        async function handleShareWord() {
+            let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
             if (word.length > 11) { showToast('Слово слишком длинное'); return; }
             if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
-            const code = encodeWord(word);
-            if (code) {
-                generatedCodeDisplay.textContent = code;
-                showFriendScreen('display');
-            } else {
+            
+            const encodedWord = encodeWord(word);
+            if (!encodedWord) {
                 showToast('Ошибка при создании ссылки');
+                return;
+            }
+
+            // Add a timestamp to the fragment to prevent caching issues
+            const fragment = `#word=${encodedWord}&ts=${Date.now()}`;
+            const shareUrl = `https://vk.com/app${APP_ID}/${fragment}`;
+
+            try {
+                await vkBridge.send('VKWebAppShare', {
+                    link: shareUrl,
+                    text: 'Я загадал тебе слово! Попробуй угадать 👇'
+                });
+                showToast('Ссылка отправлена!');
+                setTimeout(showMainMenu, 500); // Return to main menu after sharing
+            } catch (error) {
+                showToast('Не удалось поделиться');
+                console.error("Share error:", error);
             }
         }
 
@@ -4205,22 +4179,18 @@
             });
         }
        
-        // Обновленная функция для отображения модального окна в конце игры
         function showEndGameModal() {
             secretWordDisplay.textContent = secretWord.toUpperCase();
-           
-            // Кнопка "В главное меню" теперь всегда видна в конце игры
-            backToMenuFromEndgameBtn.classList.remove('hidden');
-
             if (isFriendMode) {
-                // В режиме "Слово другу" скрываем статистику и кнопку "Играть снова"
                 statsContainer.classList.add('hidden');
                 newGameButton.classList.add('hidden');
+                backToMenuFromEndgameBtn.classList.remove('hidden');
+                shareButton.classList.add('hidden'); // No need to share friend game results
             } else {
-                // В обычном режиме показываем статистику и кнопку "Играть снова"
                 statsContainer.classList.remove('hidden');
                 newGameButton.classList.remove('hidden');
-               
+                backToMenuFromEndgameBtn.classList.add('hidden');
+                 shareButton.classList.remove('hidden');
                 const currentStats = stats[wordLength] || { played: 0, wins: 0, currentStreak: 0 };
                 document.getElementById('stat-played').textContent = currentStats.played;
                 const winRate = currentStats.played > 0 ? Math.round((currentStats.wins / currentStats.played) * 100) : 0;
@@ -4229,7 +4199,6 @@
             }
             endgameModal.classList.remove('hidden');
         }
-
 
         function getTile(row, col) { return gameBoard.children[row].children[col]; }
         function shakeRow(rowIndex) { const row = gameBoard.children[rowIndex]; row.classList.add('shake'); row.addEventListener('animationend', () => row.classList.remove('shake'), { once: true }); }
@@ -4264,6 +4233,15 @@
             toast.addEventListener('animationend', () => {
                 toast.classList.remove('toast-show');
             }, { once: true });
+        }
+       
+        function createShareableText() {
+            const attemptCount = currentRowIndex + 1;
+            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇`;
+            const emojiMap = { 'correct': '🟩', 'present': '🟨', 'absent':  '⬜'  };
+            if (body.dataset.theme === 'dark') { emojiMap['absent'] =  '⬛' ; }
+            const grid = shareableResult.map(row => row.map(status => emojiMap[status]).join('')).join('\n');
+            return `${text}\n\n${grid}`;
         }
        
         function toggleTheme() {
@@ -4323,34 +4301,13 @@
 
         function addEventListeners() {
             lengthSelector.addEventListener('click', e => { if (e.target.classList.contains('menu-button')) { startGame(e.target.dataset.length); } });
-            friendModeBtn.addEventListener('click', () => showFriendScreen('menu'));
+            friendModeBtn.addEventListener('click', showFriendScreen);
             statsButton.addEventListener('click', () => { renderStatsTable(); statsModal.classList.remove('hidden'); });
             rulesButton.addEventListener('click', () => { rulesModal.classList.remove('hidden'); });
             closeStatsBtn.addEventListener('click', () => statsModal.classList.add('hidden'));
             closeRulesBtn.addEventListener('click', () => { rulesModal.classList.add('hidden'); });
-            backToMainMenuBtn.addEventListener('click', () => { showMainMenu(); });
-            createWordBtn.addEventListener('click', () => showFriendScreen('create'));
-            // Кнопка "Отгадать по коду" теперь скрыта, т.к. вход происходит по ссылке
-            guessWordBtn.classList.add('hidden');
-            generateCodeBtn.addEventListener('click', handleGenerateCode);
-
-            sendToFriendBtn.addEventListener('click', async () => {
-                const code = generatedCodeDisplay.textContent;
-                if (!code) return;
-                const shareLink = `https://vk.com/app${APP_ID}#${code}`;
-                const message = 'Я загадал для тебя слово! Попробуй отгадать его в «Словли».';
-               
-                try {
-                    await vkBridge.send('VKWebAppShare', {
-                        link: shareLink,
-                        text: message
-                    });
-                } catch(e) {
-                    showToast('Ошибка при отправке');
-                    console.error("Share error:", e);
-                }
-            });
-
+            backToMainMenuBtn.addEventListener('click', showMainMenu);
+            shareWordBtn.addEventListener('click', handleShareWord);
             themeSwitcher.addEventListener('click', toggleTheme);
             let activeKey = null;
             const handlePressStart = (e) => { if (e.target.closest('.key')) { activeKey = e.target.closest('.key'); activeKey.classList.add('pressed'); } };
@@ -4375,7 +4332,14 @@
             mainMenuButtonFromPause.addEventListener('click', () => { pauseModal.classList.add('hidden'); showMainMenu(); });
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
-           
+            shareButton.addEventListener('click', async () => {
+                const shareText = createShareableText();
+                try {
+                    await navigator.clipboard.writeText(shareText);
+                    showToast('Результат скопирован!');
+                    await vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` });
+                } catch(e) { showToast('Ошибка при отправке'); }
+            });
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
        
