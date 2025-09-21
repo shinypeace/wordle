@@ -3814,28 +3814,46 @@
         let correctLetterPositions = [];
 
         async function init() {
+            let launchParams = {};
             try {
                 await vkBridge.send('VKWebAppInit');
-                const user = await vkBridge.send('VKWebAppGetUserInfo');
-                vkUserId = user.id;
+                // Fetch user and launch params concurrently
+                const results = await Promise.allSettled([
+                    vkBridge.send('VKWebAppGetUserInfo'),
+                    vkBridge.send('VKWebAppGetLaunchParams')
+                ]);
+
+                if (results[0].status === 'fulfilled') {
+                    vkUserId = results[0].value.id;
+                } else {
+                    throw new Error("Could not get user info");
+                }
+
+                if (results[1].status === 'fulfilled') {
+                    launchParams = results[1].value;
+                }
+
             } catch (error) {
+                console.error("VK Bridge initialization failed, falling back to localStorage and URL hash", error);
                 vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
                 localStorage.setItem('guestUserId', vkUserId);
             }
+            
             loadTheme();
             await loadStats();
             createMainMenu();
             addEventListeners();
             
-            // NEW: Check for friend's word in URL hash on startup
-            if (!handleFriendWordFromURL()) {
+            // Check for friend's word from launch params or URL hash
+            if (!handleFriendWordFromURL(launchParams)) {
                 showMainMenu();
             }
         }
 
-        function handleFriendWordFromURL() {
+        function handleFriendWordFromURL(launchParams = {}) {
             try {
-                const hash = window.location.hash.substring(1);
+                // VK Mini Apps pass the fragment in vk_app_hash. Fallback to window.location.hash for testing.
+                const hash = launchParams.vk_app_hash || window.location.hash.substring(1);
                 if (!hash) return false;
 
                 const params = new URLSearchParams(hash);
@@ -3844,8 +3862,10 @@
                 if (friendWordEncoded) {
                     const decodedWord = decodeWord(friendWordEncoded);
                     if (decodedWord && decodedWord.length >= 4 && decodedWord.length <= 11) {
-                        // Clear hash from URL to prevent re-triggering
-                        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                        // Clear hash from URL to prevent re-triggering if it was from window.location
+                        if (window.location.hash) {
+                            history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                        }
                         startGame(decodedWord.length, decodedWord);
                         return true;
                     }
@@ -4348,4 +4368,5 @@
     </script>
 </body>
 </html>
+
 
