@@ -234,7 +234,7 @@
                 </div>
                 <div class="modal-buttons">
                     <button id="share-button" class="modal-button primary">Поделиться</button>
-                    <button id="new-game-button" class="modal-button secondary">Играть снова</button>
+                    <button id="new-game-button" class="modal-button secondary">Следующий</button>
                     <button id="back-to-menu-from-endgame-btn" class="modal-button secondary">В главное меню</button>
                 </div>
             </div>
@@ -3794,12 +3794,8 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         
         async function init() {
             let launchParams = {};
-            
-            // ВАЖНОЕ ИЗМЕНЕНИЕ: Читаем хэш сразу синхронно, чтобы не было мерцания меню
             const urlParams = new URLSearchParams(window.location.search);
             const vkAppHash = urlParams.get('vk_app_hash') || window.location.hash.substring(1);
-            
-            // Проверяем, запущены ли мы по ссылке с загаданным словом СРАЗУ
             const gameStartedFromUrl = handleFriendWordFromURL(vkAppHash);
             
             try {
@@ -3815,7 +3811,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 }
                 if (results[1].status === 'fulfilled') {
                     launchParams = results[1].value;
-                    // Если синхронно мы не поймали хэш, попробуем еще раз через launchParams (страховка)
                     if (!gameStartedFromUrl && launchParams.vk_app_hash) {
                          handleFriendWordFromURL(launchParams.vk_app_hash);
                     }
@@ -3831,18 +3826,43 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             createMainMenu();
             addEventListeners();
            
-            // Если игра НЕ была запущена по ссылке от друга - показываем главное меню
             if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
                 showMainMenu();
             }
         }
 
-        // ВАЖНОЕ ИЗМЕНЕНИЕ: улучшена обработка парсинга хэша
+        // БЕЗОПАСНАЯ ФУНКЦИЯ КОПИРОВАНИЯ ДЛЯ МОБИЛЬНЫХ БРАУЗЕРОВ (Используется для квадратиков победы)
+        async function copyToClipboard(text) {
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+            } catch (err) {
+                console.warn("Clipboard API failed, using fallback...");
+            }
+            
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                textArea.remove();
+                return successful;
+            } catch (e) {
+                console.error("Fallback copy failed", e);
+                return false;
+            }
+        }
+
         function handleFriendWordFromURL(hash) {
             try {
                 if (!hash) return false;
                 
-                // ВКонтакте может передать параметр с "=" или без него
                 let friendWordEncoded = '';
                 if (hash.startsWith('word=')) {
                     const params = new URLSearchParams(hash);
@@ -3851,7 +3871,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     const params = new URLSearchParams(hash);
                     friendWordEncoded = params.get('word');
                 } else {
-                    friendWordEncoded = hash; // Поддержка старых ссылок, если они были
+                    friendWordEncoded = hash; 
                 }
 
                 if (friendWordEncoded) {
@@ -3888,7 +3908,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     stats = JSON.parse(response.keys[0].value);
                     return;
                 }
-            } catch (error) { /* continue to localStorage */ }
+            } catch (error) { }
             const localData = localStorage.getItem(storageKey);
             if (localData) { stats = JSON.parse(localData); }
         }
@@ -4081,7 +4101,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
 
-        // ВАЖНОЕ ИЗМЕНЕНИЕ: Исправлен формат ссылки
+        // ВЕРНУЛ ТВОЙ ИСХОДНЫЙ ВАРИАНТ ОТПРАВКИ С ТЕКСТОМ
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
@@ -4094,20 +4114,17 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 return;
             }
             
-            // ВКонтакте принимает хэш именно без слэша перед знаком "#"
             const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
             
             try {
-                // Вызываем системное окно ВК.
-                await vkBridge.send('VKWebAppShare', {
+                await vkBridge.send('VKWebAppShare', { 
                     link: shareUrl,
+                    text: 'Я загадал тебе слово! Попробуй угадать 👇'
                 });
-                // Если пользователь не закрыл шторку крестиком, а нажал поделиться:
                 showToast('Ссылка отправлена!');
                 setTimeout(showMainMenu, 500); 
             } catch (error) {
-                // Сработает, если юзер просто закрыл системное меню
-                console.log("Пользователь отменил шаринг:", error);
+                console.log("Пользователь отменил шаринг");
             }
         }
 
@@ -4180,16 +4197,17 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
        
         function showEndGameModal() {
             secretWordDisplay.textContent = secretWord.toUpperCase();
+            backToMenuFromEndgameBtn.classList.remove('hidden');
+
             if (isFriendMode) {
                 statsContainer.classList.add('hidden');
                 newGameButton.classList.add('hidden');
-                backToMenuFromEndgameBtn.classList.remove('hidden');
                 shareButton.classList.add('hidden'); 
             } else {
                 statsContainer.classList.remove('hidden');
                 newGameButton.classList.remove('hidden');
-                backToMenuFromEndgameBtn.classList.add('hidden');
-                 shareButton.classList.remove('hidden');
+                shareButton.classList.remove('hidden');
+                
                 const currentStats = stats[wordLength] || { played: 0, wins: 0, currentStreak: 0 };
                 document.getElementById('stat-played').textContent = currentStats.played;
                 const winRate = currentStats.played > 0 ? Math.round((currentStats.wins / currentStats.played) * 100) : 0;
@@ -4233,7 +4251,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
        
         function createShareableText() {
             const attemptCount = currentRowIndex + 1;
-            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇`;
+            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇\nhttps://vk.com/app${APP_ID}`;
             const emojiMap = { 'correct': '🟩', 'present': '🟨', 'absent':  '⬜'  };
             if (body.dataset.theme === 'dark') { emojiMap['absent'] =  '⬛' ; }
             const grid = shareableResult.map(row => row.map(status => emojiMap[status]).join('')).join('\n');
@@ -4325,13 +4343,19 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             mainMenuButtonFromPause.addEventListener('click', () => { pauseModal.classList.add('hidden'); showMainMenu(); });
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
+            
             shareButton.addEventListener('click', async () => {
                 const shareText = createShareableText();
-                try {
-                    await navigator.clipboard.writeText(shareText);
-                    showToast('Результат скопирован!');
-                    await vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` });
-                } catch(e) { showToast('Ошибка при отправке'); }
+                const copied = await copyToClipboard(shareText);
+                
+                if (copied) {
+                    showToast('Результат скопирован! Вставьте в диалог или на стену.');
+                } else {
+                    showToast('Не удалось скопировать. Попробуйте снова.');
+                }
+                
+                vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` })
+                    .catch(() => { console.log('Шаринг отменен') });
             });
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
