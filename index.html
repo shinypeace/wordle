@@ -25,9 +25,8 @@
             --color-absent: #787c7e;
             --color-text-light: #ffffff;
             --shadow-color: rgba(0, 0, 0, 0.1);
-            --text-color-secondary: #787c7e; /* Добавленная переменная */
+            --text-color-secondary: #787c7e;
         }
-
         [data-theme="dark"] {
             --bg-color: #121213;
             --text-color: #ffffff;
@@ -40,19 +39,17 @@
             --header-bg: rgba(18, 18, 19, 0.8);
             --color-absent: #3a3a3c;
             --shadow-color: rgba(0, 0, 0, 0.4);
-            --text-color-secondary: #a3a3a3; /* Добавленная переменная для темной темы */
+            --text-color-secondary: #a3a3a3;
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         html, body { height: 100%; overscroll-behavior-y: contain; }
         body { font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; transition: background-color 0.3s, color 0.3s; overflow: hidden; user-select: none; }
         #app { width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
-
         #main-menu {
             display: flex;
             flex-direction: column;
-            justify-content: space-around; /* Изменено для равномерного распределения */
+            justify-content: space-around;
             align-items: center;
             height: 100%;
             text-align: center;
@@ -60,7 +57,6 @@
             padding: 20px 10px;
         }
         #friend-game-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; text-align: center; width: 100%; padding: 10px; }
-
         #main-menu h1 { font-size: 3rem; font-weight: 800; letter-spacing: 0.1em; }
         #main-menu p { font-size: 1.1rem; color: var(--text-color-secondary); }
         .length-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 380px; }
@@ -75,12 +71,11 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
-            margin-top: 10px; 
+            margin-top: 10px;
         }
         .theme-toggle { width: 50px; height: 26px; background-color: var(--key-bg); border-radius: 13px; position: relative; transition: background-color 0.3s; }
         .theme-toggle::before { content: ''; position: absolute; width: 20px; height: 20px; background-color: var(--bg-color); border-radius: 50%; top: 3px; left: 3px; transition: transform 0.3s ease; }
         [data-theme="dark"] .theme-toggle::before { transform: translateX(24px); }
-
         .friend-screen-container { text-align: center; display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 380px; }
         .friend-screen-container h2 { font-size: 1.8rem; margin-bottom: 10px; }
         .input-field { width: 100%; padding: 15px; font-size: 1.2rem; border-radius: 8px; border: 2px solid var(--tile-border-color); background-color: var(--tile-bg); color: var(--text-color); text-align: center; font-family: var(--font-family); }
@@ -107,7 +102,6 @@
         @keyframes shake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-6px); } 40%, 60% { transform: translateX(6px); } }
         .row.win { animation: bounce 0.8s ease-in-out; }
         @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
-
         #keyboard { width: 100%; padding: 5px 0; user-select: none; flex-shrink: 0; }
         .keyboard-row { display: flex; justify-content: center; margin: 0 auto 8px; gap: 6px; }
         .key { font-family: var(--font-family); font-weight: 600; background-color: var(--key-bg); color: var(--key-text-color); border: none; border-radius: 4px; cursor: pointer; display: flex; justify-content: center; align-items: center; text-transform: uppercase; height: 58px; flex: 1; font-size: 1rem; transition: background-color 0.2s, transform 0.1s; }
@@ -139,10 +133,8 @@
         .stat { display: flex; flex-direction: column; }
         .stat-value { font-size: 2rem; font-weight: 800; }
         .stat-label { font-size: 0.8rem; color: var(--text-color-secondary); }
-
         .rules-example { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .example-tile { width: 48px; height: 48px; font-size: 2rem; border-radius: 4px; }
-
         #stats-table-container { width: 100%; }
         .stats-table { width: 100%; border-collapse: collapse; }
         .stats-table th, .stats-table td { padding: 12px 15px; text-align: center; border-bottom: 1px solid var(--tile-border-color); }
@@ -157,7 +149,6 @@
             .stats-table td:last-child { border-bottom: 0; }
             .stats-table td:before { content: attr(data-label); position: absolute; left: 15px; width: 45%; padding-right: 10px; white-space: nowrap; text-align: left; font-weight: bold; color: var(--color-absent); }
         }
-
         #toast { position: fixed; top: 12%; left: 50%; transform: translateX(-50%); background-color: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 20px; z-index: 2000; font-weight: 600; pointer-events: none; opacity: 0; visibility: hidden; }
         .toast-show { animation: toast-in-out 3s ease-in-out forwards; }
         @keyframes toast-in-out {
@@ -169,7 +160,6 @@
     </style>
 </head>
 <body>
-
     <div id="app">
        
         <div id="main-menu">
@@ -187,7 +177,6 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </div>
         </div>
-
         <div id="friend-game-screen" class="hidden">
             <div class="friend-screen-container">
                 <h2>Загадайте слово</h2>
@@ -197,7 +186,6 @@
                  <button id="back-to-main-menu-btn" class="menu-button">Назад</button>
             </div>
         </div>
-
         <div id="game-screen" class="hidden">
             <header>
                 <button id="pause-button" class="icon-button">
@@ -211,7 +199,6 @@
             </div>
             <div id="keyboard"></div>
         </div>
-
         <div id="pause-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <div class="modal-body" style="text-align: center;">
@@ -252,7 +239,6 @@
                 </div>
             </div>
         </div>
-
         <div id="stats-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <h3>Статистика</h3>
@@ -264,7 +250,6 @@
                 </div>
             </div>
         </div>
-
         <div id="rules-modal" class="modal-overlay hidden">
             <div class="modal-content">
                 <h3>Правила игры</h3>
@@ -291,17 +276,12 @@
         </div>
        
         <div id="toast"></div>
-
     </div>
-
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-
         const APP_ID = 53861990; // Ваш ID приложения
         let vkUserId = null;
-
-
-        const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
+const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
 "ВРАЧ", "ВХОД", "ГЛАЗ", "ГОРА", "ГРЕХ", "ГУБА", "ДАМА", "ДАЧА", "ДВОР", "ДЕЛО", "ДЕНЬ", "ДОЛГ", "ДОЛЯ", "ДОЧЬ", "ДРУГ", "ДУМА", "ДУША", "ДЯДЯ", "ЖЕНА", "ЗВУК", "ЗИМА", "ЗНАК",
 "ЗОНА", "ИГРА", "ИДЕЯ", "ИТОГ", "ИЮЛЬ", "ИЮНЬ", "КАДР", "КЛУБ", "КЛЮЧ", "КОЖА", "КОНЬ", "КОФЕ", "КРАЙ", "КРИК", "КУРС", "КУСТ", "ЛЕТО", "ЛИСТ", "ЛИЦО", "МАМА", "МАТЬ", "МЕРА",
 "МЕТР", "МИНА", "МОЗГ", "МОРЕ", "МОСТ", "МЯСО", "НЕБО", "НОГА", "НОЧЬ", "ОБЕД", "ОКНО", "ОПЫТ", "ОТЕЦ", "ОЧКО", "ПАПА", "ПАРА", "ПИВО", "ПЛАН", "ПОЛЕ", "ПОЛК", "ПОЭТ", "ПУТЬ",
@@ -3763,7 +3743,6 @@
          const normalizeDict = (dict) => { for (const key in dict.words) { if (Object.hasOwnProperty.call(dict.words, key)) { dict.words[key] = dict.words[key].map(word => word.toLowerCase()); } } };
         normalizeDict(guessableWordsData);
         normalizeDict(validWordsData);
-
         const app = document.getElementById('app');
         const mainMenu = document.getElementById('main-menu');
         const lengthSelector = document.querySelector('.length-selector');
@@ -3812,57 +3791,72 @@
         let stats = {};
         const russianAlphabet = [ ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'], ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'], ['enter', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', 'backspace'] ];
         let correctLetterPositions = [];
-
+        
         async function init() {
             let launchParams = {};
+            
+            // ВАЖНОЕ ИЗМЕНЕНИЕ: Читаем хэш сразу синхронно, чтобы не было мерцания меню
+            const urlParams = new URLSearchParams(window.location.search);
+            const vkAppHash = urlParams.get('vk_app_hash') || window.location.hash.substring(1);
+            
+            // Проверяем, запущены ли мы по ссылке с загаданным словом СРАЗУ
+            const gameStartedFromUrl = handleFriendWordFromURL(vkAppHash);
+            
             try {
                 await vkBridge.send('VKWebAppInit');
-                // Fetch user and launch params concurrently
                 const results = await Promise.allSettled([
                     vkBridge.send('VKWebAppGetUserInfo'),
                     vkBridge.send('VKWebAppGetLaunchParams')
                 ]);
-
                 if (results[0].status === 'fulfilled') {
                     vkUserId = results[0].value.id;
                 } else {
                     throw new Error("Could not get user info");
                 }
-
                 if (results[1].status === 'fulfilled') {
                     launchParams = results[1].value;
+                    // Если синхронно мы не поймали хэш, попробуем еще раз через launchParams (страховка)
+                    if (!gameStartedFromUrl && launchParams.vk_app_hash) {
+                         handleFriendWordFromURL(launchParams.vk_app_hash);
+                    }
                 }
-
             } catch (error) {
-                console.error("VK Bridge initialization failed, falling back to localStorage and URL hash", error);
+                console.error("VK Bridge initialization failed", error);
                 vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
                 localStorage.setItem('guestUserId', vkUserId);
             }
-            
+           
             loadTheme();
             await loadStats();
             createMainMenu();
             addEventListeners();
-            
-            // Check for friend's word from launch params or URL hash
-            if (!handleFriendWordFromURL(launchParams)) {
+           
+            // Если игра НЕ была запущена по ссылке от друга - показываем главное меню
+            if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
                 showMainMenu();
             }
         }
 
-        function handleFriendWordFromURL(launchParams = {}) {
+        // ВАЖНОЕ ИЗМЕНЕНИЕ: улучшена обработка парсинга хэша
+        function handleFriendWordFromURL(hash) {
             try {
-                // VK Mini Apps pass the fragment in vk_app_hash. Fallback to window.location.hash for testing.
-                const hash = launchParams.vk_app_hash || window.location.hash.substring(1);
                 if (!hash) return false;
-
-                const params = new URLSearchParams(hash);
-                const friendWordEncoded = params.get('word');
+                
+                // ВКонтакте может передать параметр с "=" или без него
+                let friendWordEncoded = '';
+                if (hash.startsWith('word=')) {
+                    const params = new URLSearchParams(hash);
+                    friendWordEncoded = params.get('word');
+                } else if (hash.includes('&')) {
+                    const params = new URLSearchParams(hash);
+                    friendWordEncoded = params.get('word');
+                } else {
+                    friendWordEncoded = hash; // Поддержка старых ссылок, если они были
+                }
 
                 if (friendWordEncoded) {
                     const decodedWord = decodeWord(friendWordEncoded);
                     if (decodedWord && decodedWord.length >= 4 && decodedWord.length <= 11) {
-                        // Clear hash from URL to prevent re-triggering if it was from window.location
                         if (window.location.hash) {
                             history.replaceState(null, document.title, window.location.pathname + window.location.search);
                         }
@@ -3875,7 +3869,6 @@
             }
             return false;
         }
-
 
         async function saveStats() {
             const storageKey = `wordle_stats_${vkUserId}`;
@@ -3899,19 +3892,16 @@
             const localData = localStorage.getItem(storageKey);
             if (localData) { stats = JSON.parse(localData); }
         }
-
         function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; }
         function encodeWord(word) { try { return btoa(encodeURIComponent(word)); } catch (e) { return null; } }
         function decodeWord(encoded) { try { return decodeURIComponent(atob(encoded)); } catch (e) { return null; } }
         function adjustGameHeight() { createBoard(); }
-
         function showMainMenu() {
             mainMenu.classList.remove('hidden');
             gameScreen.classList.add('hidden');
             friendGameScreen.classList.add('hidden');
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
         }
-
         function showFriendScreen() {
             wordToShareInput.value = '';
             mainMenu.classList.add('hidden');
@@ -3925,7 +3915,6 @@
             if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'буквы';
             return 'букв';
         }
-
         function createMainMenu() {
             lengthSelector.innerHTML = '';
             const availableLengths = Object.keys(guessableWordsData.words);
@@ -3937,7 +3926,6 @@
                 lengthSelector.appendChild(button);
             });
         }
-
         function startGame(length, customWord = null) {
             wordLength = parseInt(length);
             isFriendMode = customWord !== null;
@@ -3964,7 +3952,6 @@
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
             setTimeout(adjustGameHeight, 50);
         }
-
         function createBoard() {
             gameBoard.innerHTML = '';
             const container = document.getElementById('game-board-container');
@@ -3992,7 +3979,6 @@
                 gameBoard.appendChild(row);
             }
         }
-
         function createKeyboard() {
             keyboardContainer.innerHTML = '';
             russianAlphabet.forEach(row => {
@@ -4014,7 +4000,6 @@
                 keyboardContainer.appendChild(keyboardRow);
             });
         }
-
         function handleKeyPress(key) {
             if (isGameOver || isProcessing) return;
             key = key.toLowerCase();
@@ -4022,7 +4007,6 @@
             else if (key === 'backspace' || key === 'delete') { deleteLetter(); }
             else if (/^[а-яё]$/.test(key)) { addLetter(key === 'ё' ? 'е' : key); }
         }
-
         function addLetter(letter) {
             const firstEmptyIndex = boardState[currentRowIndex].indexOf('');
             if (firstEmptyIndex !== -1) {
@@ -4033,7 +4017,6 @@
                 tile.classList.remove('placeholder');
             }
         }
-
         function deleteLetter() {
             let lastFilledIndex = -1;
             for (let i = boardState[currentRowIndex].length - 1; i >= 0; i--) { if (boardState[currentRowIndex][i] !== '') { lastFilledIndex = i; break; } }
@@ -4048,7 +4031,6 @@
                 }
             }
         }
-
         async function submitGuess() {
             if (boardState[currentRowIndex].includes('')) { showToast('Слишком короткое слово'); shakeRow(currentRowIndex); return; }
             const guess = boardState[currentRowIndex].join('');
@@ -4066,7 +4048,6 @@
             else { moveToNextRow(); }
             isProcessing = false;
         }
-
         function checkGuess(guess) {
             const result = Array(wordLength).fill('absent');
             const secretLetters = secretWord.split('');
@@ -4089,7 +4070,6 @@
         }
        
         function moveToNextRow() { currentRowIndex++; projectPlaceholders(); }
-
         function projectPlaceholders() {
             if (currentRowIndex >= maxGuesses) return;
             for (let i = 0; i < wordLength; i++) {
@@ -4101,32 +4081,33 @@
             }
         }
 
+        // ВАЖНОЕ ИЗМЕНЕНИЕ: Исправлен формат ссылки
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
             if (word.length > 11) { showToast('Слово слишком длинное'); return; }
             if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
-            
+           
             const encodedWord = encodeWord(word);
             if (!encodedWord) {
                 showToast('Ошибка при создании ссылки');
                 return;
             }
-
-            // Add a timestamp to the fragment to prevent caching issues
-            const fragment = `#word=${encodedWord}&ts=${Date.now()}`;
-            const shareUrl = `https://vk.com/app${APP_ID}/${fragment}`;
-
+            
+            // ВКонтакте принимает хэш именно без слэша перед знаком "#"
+            const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
+            
             try {
+                // Вызываем системное окно ВК.
                 await vkBridge.send('VKWebAppShare', {
                     link: shareUrl,
-                    text: 'Я загадал тебе слово! Попробуй угадать 👇'
                 });
+                // Если пользователь не закрыл шторку крестиком, а нажал поделиться:
                 showToast('Ссылка отправлена!');
-                setTimeout(showMainMenu, 500); // Return to main menu after sharing
+                setTimeout(showMainMenu, 500); 
             } catch (error) {
-                showToast('Не удалось поделиться');
-                console.error("Share error:", error);
+                // Сработает, если юзер просто закрыл системное меню
+                console.log("Пользователь отменил шаринг:", error);
             }
         }
 
@@ -4157,7 +4138,6 @@
                 showToast('Ошибка при показе рекламы');
             }
         }
-
         async function onGameEnd() {
             if (isFriendMode) return;
             gamesPlayedSinceAd++;
@@ -4171,7 +4151,6 @@
                 } catch (error) { console.error('Interstitial ad error:', error); }
             }
         }
-
         async function winGame() {
             isGameOver = true;
             await updateStats(true);
@@ -4205,7 +4184,7 @@
                 statsContainer.classList.add('hidden');
                 newGameButton.classList.add('hidden');
                 backToMenuFromEndgameBtn.classList.remove('hidden');
-                shareButton.classList.add('hidden'); // No need to share friend game results
+                shareButton.classList.add('hidden'); 
             } else {
                 statsContainer.classList.remove('hidden');
                 newGameButton.classList.remove('hidden');
@@ -4219,10 +4198,8 @@
             }
             endgameModal.classList.remove('hidden');
         }
-
         function getTile(row, col) { return gameBoard.children[row].children[col]; }
         function shakeRow(rowIndex) { const row = gameBoard.children[rowIndex]; row.classList.add('shake'); row.addEventListener('animationend', () => row.classList.remove('shake'), { once: true }); }
-
         async function animateGuess(result) {
             const row = gameBoard.children[currentRowIndex];
             for (let i = 0; i < wordLength; i++) {
@@ -4233,7 +4210,6 @@
             }
             await new Promise(resolve => setTimeout(resolve, 600));
         }
-
         function updateKeyboard(result) {
             const guess = boardState[currentRowIndex];
             guess.forEach((letter, index) => {
@@ -4269,7 +4245,6 @@
             body.dataset.theme = newTheme;
             localStorage.setItem('wordle-theme', newTheme);
         }
-
         function loadTheme() {
             const savedTheme = localStorage.getItem('wordle-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
             body.dataset.theme = savedTheme;
@@ -4284,7 +4259,6 @@
             else { modeStats.currentStreak = 0; }
             await saveStats();
         }
-
         function renderStatsTable() {
             const container = document.getElementById('stats-table-container');
             container.innerHTML = '';
@@ -4318,7 +4292,6 @@
             table.appendChild(tbody);
             container.appendChild(table);
         }
-
         function addEventListeners() {
             lengthSelector.addEventListener('click', e => { if (e.target.classList.contains('menu-button')) { startGame(e.target.dataset.length); } });
             friendModeBtn.addEventListener('click', showFriendScreen);
@@ -4368,5 +4341,3 @@
     </script>
 </body>
 </html>
-
-
