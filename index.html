@@ -3831,7 +3831,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
 
-        // БЕЗОПАСНАЯ ФУНКЦИЯ КОПИРОВАНИЯ ДЛЯ МОБИЛЬНЫХ БРАУЗЕРОВ (Используется для квадратиков победы)
         async function copyToClipboard(text) {
             try {
                 if (navigator.clipboard && window.isSecureContext) {
@@ -3970,10 +3969,12 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             friendGameScreen.classList.add('hidden');
             gameScreen.classList.remove('hidden');
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
+            
+            gameBoard.innerHTML = '';
             setTimeout(adjustGameHeight, 50);
         }
+        
         function createBoard() {
-            gameBoard.innerHTML = '';
             const container = document.getElementById('game-board-container');
             if (!container) return;
             const containerWidth = container.clientWidth;
@@ -3983,9 +3984,22 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             const tileSize = Math.floor(Math.min(tileWidth, tileHeight));
             const boardWidth = tileSize * wordLength + (wordLength - 1) * 5;
             const boardHeight = tileSize * maxGuesses + (maxGuesses - 1) * 5;
+            
             gameBoard.style.width = `${boardWidth}px`;
             gameBoard.style.height = `${boardHeight}px`;
             gameBoard.style.gridTemplateRows = `repeat(${maxGuesses}, 1fr)`;
+
+            if (gameBoard.children.length === maxGuesses) {
+                for (let i = 0; i < maxGuesses; i++) {
+                    const row = gameBoard.children[i];
+                    for (let j = 0; j < wordLength; j++) {
+                        if(row.children[j]) row.children[j].style.fontSize = `${tileSize * 0.5}px`;
+                    }
+                }
+                return;
+            }
+
+            gameBoard.innerHTML = '';
             for (let i = 0; i < maxGuesses; i++) {
                 const row = document.createElement('div');
                 row.className = 'board-row';
@@ -3999,6 +4013,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 gameBoard.appendChild(row);
             }
         }
+        
         function createKeyboard() {
             keyboardContainer.innerHTML = '';
             russianAlphabet.forEach(row => {
@@ -4101,7 +4116,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
 
-        // ВЕРНУЛ ТВОЙ ИСХОДНЫЙ ВАРИАНТ ОТПРАВКИ С ТЕКСТОМ
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
@@ -4251,7 +4265,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
        
         function createShareableText() {
             const attemptCount = currentRowIndex + 1;
-            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇\nhttps://vk.com/app${APP_ID}`;
+            const text = `🧠 Я отгадал слово из ${wordLength} букв за ${attemptCount}/${maxGuesses}! А ты сможешь? 👇`;
             const emojiMap = { 'correct': '🟩', 'present': '🟨', 'absent':  '⬜'  };
             if (body.dataset.theme === 'dark') { emojiMap['absent'] =  '⬛' ; }
             const grid = shareableResult.map(row => row.map(status => emojiMap[status]).join('')).join('\n');
@@ -4344,19 +4358,21 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
             
+            // ВАЖНОЕ ИЗМЕНЕНИЕ ТУТ: Прямая передача текста квадратиков в окно ВК
             shareButton.addEventListener('click', async () => {
                 const shareText = createShareableText();
-                const copied = await copyToClipboard(shareText);
                 
-                if (copied) {
-                    showToast('Результат скопирован! Вставьте в диалог или на стену.');
-                } else {
-                    showToast('Не удалось скопировать. Попробуйте снова.');
-                }
+                // Тихо копируем в буфер (полезно, если пользователь захочет вставить сам в другой мессенджер)
+                await copyToClipboard(shareText + `\n\nhttps://vk.com/app${APP_ID}`);
                 
-                vkBridge.send('VKWebAppShare', { link: `https://vk.com/app${APP_ID}` })
-                    .catch(() => { console.log('Шаринг отменен') });
+                // Вызываем нативное окно ВКонтакте и передаем наши цветные квадратики прямо туда!
+                vkBridge.send('VKWebAppShare', { 
+                    link: `https://vk.com/app${APP_ID}`,
+                    text: shareText // Вот здесь мы отдаем текст в сообщение ВК
+                })
+                .catch(() => { console.log('Шаринг отменен') });
             });
+
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
        
