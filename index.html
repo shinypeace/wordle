@@ -3796,15 +3796,13 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             return btoa(encodeURIComponent(word));
         }
 
-        // Бронебойный парсер (ищет слово сквозь любые кодировки и слэши мобильного ВК)
+        // Бронебойный парсер (исправленный для работы на мобильных клиентах ВК)
         function findWordInString(str) {
             if (!str) return null;
-            try { str = decodeURIComponent(str); } catch(e){}
-            // Ищем конструкцию word=XXXX, останавливаемся на &, /, ?, #
-            const match = str.match(/word=([^&/?#]+)/); 
+            const match = str.match(/word=([A-Za-z0-9+/=%]+)/); 
             if (match) {
                 let encoded = match[1];
-                // Вычищаем любой мусор (пробелы, слэши), оставляем только Base64 символы
+                try { encoded = decodeURIComponent(encoded); } catch(e){}
                 encoded = encoded.replace(/[^A-Za-z0-9+/=]/g, ''); 
                 try {
                     let decoded = decodeURIComponent(atob(encoded));
@@ -3817,80 +3815,73 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         }
 
         async function init() {
-    // 1. Тихое чтение: просто запоминаем загаданное слово, ничего не запуская и не меняя UI
-    let friendWordToStart = null;
-    
-    let initialWord = findWordInString(window.location.search) || 
-                      findWordInString(window.location.hash) || 
-                      findWordInString(window.location.href);
-
-    if (initialWord) {
-        friendWordToStart = initialWord;
-    }
-
-    // Подписываемся на события изменения фрагмента (если игра висит в фоне на телефоне)
-    vkBridge.subscribe((e) => {
-        if (e.detail.type === 'VKWebAppChangeFragment') {
-            let foundWord = findWordInString(e.detail.data.location);
-            if (foundWord) startGame(foundWord.length, foundWord);
-        }
-    });
-    window.addEventListener('hashchange', () => {
-        let foundWord = findWordInString(window.location.hash);
-        if (foundWord) startGame(foundWord.length, foundWord);
-    });
-
-    // 2. Инициализация: Железно дожидаемся готовности VK Bridge
-    try {
-        await vkBridge.send('VKWebAppInit');
-        
-        const results = await Promise.allSettled([
-            vkBridge.send('VKWebAppGetUserInfo'),
-            vkBridge.send('VKWebAppGetLaunchParams')
-        ]);
-        
-        if (results[0].status === 'fulfilled') {
-            vkUserId = results[0].value.id;
-        } else {
-            throw new Error("Could not get user info");
-        }
-        
-        // 3. Параметры запуска: проверяем vk_app_hash, если слово не нашлось на 1-м шаге
-        if (results[1].status === 'fulfilled') {
-            let launchParams = results[1].value;
-            if (!friendWordToStart && launchParams.vk_app_hash) {
-                 let launchWord = findWordInString(launchParams.vk_app_hash);
-                 if (launchWord) {
-                     friendWordToStart = launchWord;
-                 }
+            let gameStartedFromUrl = false;
+            // 1. Слушаем события мобильного клиента (важно для Android/iOS, если игра висела в фоне)
+            vkBridge.subscribe((e) => {
+                if (e.detail.type === 'VKWebAppChangeFragment') {
+                    let foundWord = findWordInString(e.detail.data.location);
+                    if (foundWord) {
+                        gameStartedFromUrl = true; // Защита от переоткрытия меню
+                        startGame(foundWord.length, foundWord);
+                    }
+                }
+            });
+            // 2. Ищем слово во всех возможных местах при старте игры
+            let initialWord = findWordInString(window.location.search) || 
+                              findWordInString(window.location.hash) || 
+                              findWordInString(window.location.href);
+            if (initialWord) {
+                if (window.location.hash) {
+                    history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                }
+                startGame(initialWord.length, initialWord);
+                gameStartedFromUrl = true;
+            }
+            
+            try {
+                await vkBridge.send('VKWebAppInit');
+                const results = await Promise.allSettled([
+                    vkBridge.send('VKWebAppGetUserInfo'),
+                    vkBridge.send('VKWebAppGetLaunchParams')
+                ]);
+                
+                if (results[0].status === 'fulfilled') {
+                    vkUserId = results[0].value.id;
+                } else {
+                    console.warn("Could not get user info, proceeding with guest account");
+                    vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
+                    localStorage.setItem('guestUserId', vkUserId);
+                }
+                
+                // Последняя страховка: если слова не было в ссылке, но оно пришло в стартовых параметрах ВК
+                if (results[1].status === 'fulfilled' && !gameStartedFromUrl) {
+                    let launchParams = results[1].value;
+                    if (launchParams.vk_app_hash) {
+                         let launchWord = findWordInString(launchParams.vk_app_hash);
+                         if (launchWord) {
+                             startGame(launchWord.length, launchWord);
+                             gameStartedFromUrl = true;
+                         }
+                    }
+                }
+            } catch (error) {
+                console.error("VK Bridge initialization failed", error);
+                if (!vkUserId) {
+                    vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
+                    localStorage.setItem('guestUserId', vkUserId);
+                }
+            }
+           
+            loadTheme();
+            await loadStats();
+            createMainMenu();
+            addEventListeners();
+           
+            // Если игра не была запущена по ссылке, открываем меню
+            if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
+                showMainMenu();
             }
         }
-    } catch (error) {
-        console.error("VK Bridge initialization failed", error);
-        vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
-        localStorage.setItem('guestUserId', vkUserId);
-    }
-   
-    // Подготавливаем базу игры (на этом этапе реклама еще не вызывается)
-    loadTheme();
-    await loadStats();
-    createMainMenu();
-    addEventListeners();
-   
-    // 4. Рендер UI: Только теперь запускаем нужный экран
-    if (friendWordToStart) {
-        // Очищаем хэш из адресной строки для красоты
-        if (window.location.hash) {
-            history.replaceState(null, document.title, window.location.pathname + window.location.search);
-        }
-        // Безопасно запускаем игру (внутри вызовется показ рекламы, но VK Bridge уже готов)
-        startGame(friendWordToStart.length, friendWordToStart);
-    } else {
-        // Обычный запуск — показываем меню
-        showMainMenu();
-    }
-}
-
 
         async function copyToClipboard(text) {
             try {
@@ -3918,7 +3909,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 return false;
             }
         }
-
         async function saveStats() {
             const storageKey = `wordle_stats_${vkUserId}`;
             const dataToSave = JSON.stringify(stats);
@@ -4022,7 +4012,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             gameBoard.style.width = `${boardWidth}px`;
             gameBoard.style.height = `${boardHeight}px`;
             gameBoard.style.gridTemplateRows = `repeat(${maxGuesses}, 1fr)`;
-
             if (gameBoard.children.length === maxGuesses) {
                 for (let i = 0; i < maxGuesses; i++) {
                     const row = gameBoard.children[i];
@@ -4032,7 +4021,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 }
                 return;
             }
-
             gameBoard.innerHTML = '';
             for (let i = 0; i < maxGuesses; i++) {
                 const row = document.createElement('div');
@@ -4149,7 +4137,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 }
             }
         }
-
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
@@ -4175,7 +4162,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 console.log("Пользователь отменил шаринг");
             }
         }
-
         async function handleHint() {
             if (isGameOver || isProcessing) return;
             try {
@@ -4246,7 +4232,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         function showEndGameModal() {
             secretWordDisplay.textContent = secretWord.toUpperCase();
             backToMenuFromEndgameBtn.classList.remove('hidden');
-
             if (isFriendMode) {
                 statsContainer.classList.add('hidden');
                 newGameButton.classList.add('hidden');
@@ -4403,7 +4388,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 })
                 .catch(() => { console.log('Шаринг отменен') });
             });
-
             window.addEventListener('resize', debounce(adjustGameHeight, 100));
         }
        
@@ -4412,3 +4396,4 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
     </script>
 </body>
 </html>
+
