@@ -3792,60 +3792,55 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         const russianAlphabet = [ ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'], ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'], ['enter', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', 'backspace'] ];
         let correctLetterPositions = [];
         
-        // НОВАЯ БРОНЕБОЙНАЯ ФУНКЦИЯ КОДИРОВАНИЯ (Без знаков "=" и спецсимволов)
-        function encodeWord(word) { 
-            try { 
-                let b64 = btoa(encodeURIComponent(word)); 
-                return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-            } catch (e) { return null; } 
-        }
-        function decodeWord(encoded) { 
-            try { 
-                let b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
-                while (b64.length % 4) { b64 += '='; }
-                return decodeURIComponent(atob(b64)); 
-            } catch (e) { return null; } 
+        function encodeWord(word) {
+            return btoa(encodeURIComponent(word));
         }
 
-        // НОВЫЙ БРОНЕБОЙНЫЙ ПАРСЕР ПО РЕГУЛЯРНОМУ ВЫРАЖЕНИЮ
-        function handleFriendWordFromURL(fullUrlOrHash) {
-            if (!fullUrlOrHash) return false;
-            
-            let decodedString = fullUrlOrHash;
-            // Декодируем дважды, так как мобильный ВК часто кодирует хэш несколько раз
-            try { decodedString = decodeURIComponent(fullUrlOrHash); } catch(e) {}
-            try { decodedString = decodeURIComponent(decodedString); } catch(e) {}
-            
-            // Ищем приставку FW- и после нее символы (буквы, цифры, дефис, нижнее подчеркивание)
-            const match = decodedString.match(/FW-([A-Za-z0-9_-]+)/);
+        // Бронебойный парсер (ищет слово сквозь любые кодировки и слэши мобильного ВК)
+        function findWordInString(str) {
+            if (!str) return null;
+            try { str = decodeURIComponent(str); } catch(e){}
+            // Ищем конструкцию word=XXXX, останавливаемся на &, /, ?, #
+            const match = str.match(/word=([^&/?#]+)/); 
             if (match) {
-                const friendWordEncoded = match[1];
-                const decodedWord = decodeWord(friendWordEncoded);
-                
-                if (decodedWord && decodedWord.length >= 4 && decodedWord.length <= 11) {
-                    if (window.location.hash) {
-                        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                let encoded = match[1];
+                // Вычищаем любой мусор (пробелы, слэши), оставляем только Base64 символы
+                encoded = encoded.replace(/[^A-Za-z0-9+/=]/g, ''); 
+                try {
+                    let decoded = decodeURIComponent(atob(encoded));
+                    if (decoded && decoded.length >= 4 && decoded.length <= 11) {
+                        return decoded;
                     }
-                    startGame(decodedWord.length, decodedWord);
-                    return true;
-                }
+                } catch(e) {}
             }
-            return false;
+            return null;
         }
 
         async function init() {
-            // Подписываемся на события изменения фрагмента, если игра висит в фоне на телефоне
+            let gameStartedFromUrl = false;
+
+            // 1. Слушаем события мобильного клиента (важно для Android/iOS, если игра висела в фоне)
             vkBridge.subscribe((e) => {
                 if (e.detail.type === 'VKWebAppChangeFragment') {
-                    handleFriendWordFromURL(e.detail.data.location);
+                    let foundWord = findWordInString(e.detail.data.location);
+                    if (foundWord) {
+                        startGame(foundWord.length, foundWord);
+                    }
                 }
             });
-            window.addEventListener('hashchange', () => {
-                handleFriendWordFromURL(window.location.hash);
-            });
 
-            // Кормим всю строку целиком в наш регулярный поиск
-            let gameStartedFromUrl = handleFriendWordFromURL(window.location.href);
+            // 2. Ищем слово во всех возможных местах при старте игры
+            let initialWord = findWordInString(window.location.search) || 
+                              findWordInString(window.location.hash) || 
+                              findWordInString(window.location.href);
+
+            if (initialWord) {
+                if (window.location.hash) {
+                    history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                }
+                startGame(initialWord.length, initialWord);
+                gameStartedFromUrl = true;
+            }
             
             try {
                 await vkBridge.send('VKWebAppInit');
@@ -3858,11 +3853,15 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 } else {
                     throw new Error("Could not get user info");
                 }
-                if (results[1].status === 'fulfilled') {
+                // Последняя страховка: если слова не было в ссылке, но оно пришло в стартовых параметрах ВК
+                if (results[1].status === 'fulfilled' && !gameStartedFromUrl) {
                     let launchParams = results[1].value;
-                    // Дополнительная проверка на случай, если ссылка пришла только в launchParams
-                    if (!gameStartedFromUrl && launchParams.vk_app_hash) {
-                         gameStartedFromUrl = handleFriendWordFromURL(launchParams.vk_app_hash);
+                    if (launchParams.vk_app_hash) {
+                         let launchWord = findWordInString(launchParams.vk_app_hash);
+                         if (launchWord) {
+                             startGame(launchWord.length, launchWord);
+                             gameStartedFromUrl = true;
+                         }
                     }
                 }
             } catch (error) {
@@ -3876,6 +3875,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             createMainMenu();
             addEventListeners();
            
+            // Если игра не была запущена по ссылке, открываем меню
             if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
                 showMainMenu();
             }
@@ -4139,7 +4139,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
 
-        // Обновлено формирование ссылки
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
@@ -4152,8 +4151,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 return;
             }
             
-            // Используем новую безопасную приставку FW-
-            const shareUrl = `https://vk.com/app${APP_ID}#FW-${encodedWord}`;
+            const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
             
             try {
                 await vkBridge.send('VKWebAppShare', { 
