@@ -3792,21 +3792,60 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         const russianAlphabet = [ ['й', 'ц', 'у', 'к', 'е', 'н', 'г', 'ш', 'щ', 'з', 'х', 'ъ'], ['ф', 'ы', 'в', 'а', 'п', 'р', 'о', 'л', 'д', 'ж', 'э'], ['enter', 'я', 'ч', 'с', 'м', 'и', 'т', 'ь', 'б', 'ю', 'backspace'] ];
         let correctLetterPositions = [];
         
+        // НОВАЯ БРОНЕБОЙНАЯ ФУНКЦИЯ КОДИРОВАНИЯ (Без знаков "=" и спецсимволов)
+        function encodeWord(word) { 
+            try { 
+                let b64 = btoa(encodeURIComponent(word)); 
+                return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            } catch (e) { return null; } 
+        }
+        function decodeWord(encoded) { 
+            try { 
+                let b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) { b64 += '='; }
+                return decodeURIComponent(atob(b64)); 
+            } catch (e) { return null; } 
+        }
+
+        // НОВЫЙ БРОНЕБОЙНЫЙ ПАРСЕР ПО РЕГУЛЯРНОМУ ВЫРАЖЕНИЮ
+        function handleFriendWordFromURL(fullUrlOrHash) {
+            if (!fullUrlOrHash) return false;
+            
+            let decodedString = fullUrlOrHash;
+            // Декодируем дважды, так как мобильный ВК часто кодирует хэш несколько раз
+            try { decodedString = decodeURIComponent(fullUrlOrHash); } catch(e) {}
+            try { decodedString = decodeURIComponent(decodedString); } catch(e) {}
+            
+            // Ищем приставку FW- и после нее символы (буквы, цифры, дефис, нижнее подчеркивание)
+            const match = decodedString.match(/FW-([A-Za-z0-9_-]+)/);
+            if (match) {
+                const friendWordEncoded = match[1];
+                const decodedWord = decodeWord(friendWordEncoded);
+                
+                if (decodedWord && decodedWord.length >= 4 && decodedWord.length <= 11) {
+                    if (window.location.hash) {
+                        history.replaceState(null, document.title, window.location.pathname + window.location.search);
+                    }
+                    startGame(decodedWord.length, decodedWord);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         async function init() {
-            // Подписываемся на события изменения фрагмента ВК, если игра свернута
+            // Подписываемся на события изменения фрагмента, если игра висит в фоне на телефоне
             vkBridge.subscribe((e) => {
                 if (e.detail.type === 'VKWebAppChangeFragment') {
                     handleFriendWordFromURL(e.detail.data.location);
                 }
             });
             window.addEventListener('hashchange', () => {
-                handleFriendWordFromURL(window.location.hash.substring(1));
+                handleFriendWordFromURL(window.location.hash);
             });
 
-            let launchParams = {};
-            const urlParams = new URLSearchParams(window.location.search);
-            const vkAppHash = urlParams.get('vk_app_hash') || window.location.hash.substring(1);
-            const gameStartedFromUrl = handleFriendWordFromURL(vkAppHash);
+            // Кормим всю строку целиком в наш регулярный поиск
+            let gameStartedFromUrl = handleFriendWordFromURL(window.location.href);
             
             try {
                 await vkBridge.send('VKWebAppInit');
@@ -3820,9 +3859,10 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     throw new Error("Could not get user info");
                 }
                 if (results[1].status === 'fulfilled') {
-                    launchParams = results[1].value;
+                    let launchParams = results[1].value;
+                    // Дополнительная проверка на случай, если ссылка пришла только в launchParams
                     if (!gameStartedFromUrl && launchParams.vk_app_hash) {
-                         handleFriendWordFromURL(launchParams.vk_app_hash);
+                         gameStartedFromUrl = handleFriendWordFromURL(launchParams.vk_app_hash);
                     }
                 }
             } catch (error) {
@@ -3868,39 +3908,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
 
-        function handleFriendWordFromURL(hash) {
-            try {
-                if (!hash) return false;
-                
-                // ВАЖНО: Фикс для Android и iOS (удаляем лишний слэш в начале хэша, если он там есть)
-                if (hash.startsWith('/')) {
-                    hash = hash.substring(1);
-                }
-                
-                let friendWordEncoded = '';
-                if (hash.includes('word=')) {
-                    const params = new URLSearchParams(hash);
-                    friendWordEncoded = params.get('word');
-                } else {
-                    friendWordEncoded = hash; 
-                }
-
-                if (friendWordEncoded) {
-                    const decodedWord = decodeWord(friendWordEncoded);
-                    if (decodedWord && decodedWord.length >= 4 && decodedWord.length <= 11) {
-                        if (window.location.hash) {
-                            history.replaceState(null, document.title, window.location.pathname + window.location.search);
-                        }
-                        startGame(decodedWord.length, decodedWord);
-                        return true;
-                    }
-                }
-            } catch (error) {
-                console.error("Error parsing friend word from URL:", error);
-            }
-            return false;
-        }
-
         async function saveStats() {
             const storageKey = `wordle_stats_${vkUserId}`;
             const dataToSave = JSON.stringify(stats);
@@ -3924,8 +3931,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             if (localData) { stats = JSON.parse(localData); }
         }
         function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; }
-        function encodeWord(word) { try { return btoa(encodeURIComponent(word)); } catch (e) { return null; } }
-        function decodeWord(encoded) { try { return decodeURIComponent(atob(encoded)); } catch (e) { return null; } }
         function adjustGameHeight() { createBoard(); }
         function showMainMenu() {
             mainMenu.classList.remove('hidden');
@@ -3978,7 +3983,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             createKeyboard();
             gameTitle.textContent = isFriendMode ? 'СЛОВО ОТ ДРУГА' : `СЛОВО ИЗ ${wordLength} БУКВ`;
             
-            // На случай, если игра открывается из фона
             pauseModal.classList.add('hidden');
             endgameModal.classList.add('hidden');
             statsModal.classList.add('hidden');
@@ -4135,6 +4139,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
 
+        // Обновлено формирование ссылки
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
@@ -4147,7 +4152,8 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 return;
             }
             
-            const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
+            // Используем новую безопасную приставку FW-
+            const shareUrl = `https://vk.com/app${APP_ID}#FW-${encodedWord}`;
             
             try {
                 await vkBridge.send('VKWebAppShare', { 
