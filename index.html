@@ -3793,6 +3793,16 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         let correctLetterPositions = [];
         
         async function init() {
+            // Подписываемся на события изменения фрагмента ВК, если игра свернута
+            vkBridge.subscribe((e) => {
+                if (e.detail.type === 'VKWebAppChangeFragment') {
+                    handleFriendWordFromURL(e.detail.data.location);
+                }
+            });
+            window.addEventListener('hashchange', () => {
+                handleFriendWordFromURL(window.location.hash.substring(1));
+            });
+
             let launchParams = {};
             const urlParams = new URLSearchParams(window.location.search);
             const vkAppHash = urlParams.get('vk_app_hash') || window.location.hash.substring(1);
@@ -3862,11 +3872,13 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             try {
                 if (!hash) return false;
                 
+                // ВАЖНО: Фикс для Android и iOS (удаляем лишний слэш в начале хэша, если он там есть)
+                if (hash.startsWith('/')) {
+                    hash = hash.substring(1);
+                }
+                
                 let friendWordEncoded = '';
-                if (hash.startsWith('word=')) {
-                    const params = new URLSearchParams(hash);
-                    friendWordEncoded = params.get('word');
-                } else if (hash.includes('&')) {
+                if (hash.includes('word=')) {
                     const params = new URLSearchParams(hash);
                     friendWordEncoded = params.get('word');
                 } else {
@@ -3965,8 +3977,15 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             correctLetterPositions = Array(wordLength).fill(null);
             createKeyboard();
             gameTitle.textContent = isFriendMode ? 'СЛОВО ОТ ДРУГА' : `СЛОВО ИЗ ${wordLength} БУКВ`;
+            
+            // На случай, если игра открывается из фона
+            pauseModal.classList.add('hidden');
+            endgameModal.classList.add('hidden');
+            statsModal.classList.add('hidden');
+            rulesModal.classList.add('hidden');
             mainMenu.classList.add('hidden');
             friendGameScreen.classList.add('hidden');
+            
             gameScreen.classList.remove('hidden');
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
             
@@ -4358,17 +4377,14 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
             
-            // ВАЖНОЕ ИЗМЕНЕНИЕ ТУТ: Прямая передача текста квадратиков в окно ВК
             shareButton.addEventListener('click', async () => {
                 const shareText = createShareableText();
                 
-                // Тихо копируем в буфер (полезно, если пользователь захочет вставить сам в другой мессенджер)
                 await copyToClipboard(shareText + `\n\nhttps://vk.com/app${APP_ID}`);
                 
-                // Вызываем нативное окно ВКонтакте и передаем наши цветные квадратики прямо туда!
                 vkBridge.send('VKWebAppShare', { 
                     link: `https://vk.com/app${APP_ID}`,
-                    text: shareText // Вот здесь мы отдаем текст в сообщение ВК
+                    text: shareText
                 })
                 .catch(() => { console.log('Шаринг отменен') });
             });
