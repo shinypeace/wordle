@@ -279,7 +279,7 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        const APP_ID = 54683476; // Ваш ID приложения
+        const APP_ID = 53861990; // Ваш ID приложения
         let vkUserId = null;
 const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
 "ВРАЧ", "ВХОД", "ГЛАЗ", "ГОРА", "ГРЕХ", "ГУБА", "ДАМА", "ДАЧА", "ДВОР", "ДЕЛО", "ДЕНЬ", "ДОЛГ", "ДОЛЯ", "ДОЧЬ", "ДРУГ", "ДУМА", "ДУША", "ДЯДЯ", "ЖЕНА", "ЗВУК", "ЗИМА", "ЗНАК",
@@ -3796,40 +3796,66 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             return btoa(encodeURIComponent(word));
         }
 
-        // Бронебойный парсер (исправленный для работы на мобильных клиентах ВК)
-        function findWordInString(str) {
+        // --- ИЗМЕНЕННЫЙ БЛОК: НОВЫЙ БРОНЕБОЙНЫЙ ПАРСЕР ---
+        function extractWordFromHashData(str) {
             if (!str) return null;
-            const match = str.match(/word=([A-Za-z0-9+/=%]+)/); 
+            try { 
+                // В мобильном ВК данные могут прийти закодированными (url-encoded)
+                str = decodeURIComponent(str); 
+            } catch(e){}
+            
+            // Ищем конструкцию word=XXXX, останавливаемся на &, /, ?, #
+            const match = str.match(/word=([^&/?#]+)/); 
             if (match) {
                 let encoded = match[1];
-                try { encoded = decodeURIComponent(encoded); } catch(e){}
+                // Вычищаем любой мусор (пробелы, слэши), оставляем только Base64 символы
                 encoded = encoded.replace(/[^A-Za-z0-9+/=]/g, ''); 
                 try {
                     let decoded = decodeURIComponent(atob(encoded));
                     if (decoded && decoded.length >= 4 && decoded.length <= 11) {
-                        return decoded;
+                        return decoded.toLowerCase();
                     }
                 } catch(e) {}
             }
             return null;
         }
 
+        // Перебор всех мест, куда мобильный ВК или браузер мог засунуть ссылку
+        function getInitialWord() {
+            const searchParams = new URLSearchParams(window.location.search);
+            
+            const sources = [
+                searchParams.get('vk_hash'),           // Сюда мобильный ВК кладет хэш
+                searchParams.get('vk_app_hash'),       // Альтернативный параметр ВК
+                window.location.hash.replace('#', ''), // Для обычной ПК-версии
+                window.location.search                 // На всякий случай
+            ];
+
+            for (let source of sources) {
+                if (source) {
+                    const word = extractWordFromHashData(source);
+                    if (word) return word;
+                }
+            }
+            return null;
+        }
+        // --- КОНЕЦ ИЗМЕНЕННОГО БЛОКА ---
+
         async function init() {
             let gameStartedFromUrl = false;
+            
             // 1. Слушаем события мобильного клиента (важно для Android/iOS, если игра висела в фоне)
             vkBridge.subscribe((e) => {
                 if (e.detail.type === 'VKWebAppChangeFragment') {
-                    let foundWord = findWordInString(e.detail.data.location);
+                    let foundWord = extractWordFromHashData(e.detail.data.location);
                     if (foundWord) {
-                        gameStartedFromUrl = true; // Защита от переоткрытия меню
                         startGame(foundWord.length, foundWord);
                     }
                 }
             });
+
             // 2. Ищем слово во всех возможных местах при старте игры
-            let initialWord = findWordInString(window.location.search) || 
-                              findWordInString(window.location.hash) || 
-                              findWordInString(window.location.href);
+            let initialWord = getInitialWord();
             if (initialWord) {
                 if (window.location.hash) {
                     history.replaceState(null, document.title, window.location.pathname + window.location.search);
@@ -3844,32 +3870,25 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     vkBridge.send('VKWebAppGetUserInfo'),
                     vkBridge.send('VKWebAppGetLaunchParams')
                 ]);
-                
                 if (results[0].status === 'fulfilled') {
                     vkUserId = results[0].value.id;
                 } else {
-                    console.warn("Could not get user info, proceeding with guest account");
-                    vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
-                    localStorage.setItem('guestUserId', vkUserId);
+                    throw new Error("Could not get user info");
                 }
                 
-                // Последняя страховка: если слова не было в ссылке, но оно пришло в стартовых параметрах ВК
+                // 3. Последняя страховка: если слова не было в ссылке, но оно пришло в стартовых параметрах моста ВК
                 if (results[1].status === 'fulfilled' && !gameStartedFromUrl) {
                     let launchParams = results[1].value;
-                    if (launchParams.vk_app_hash) {
-                         let launchWord = findWordInString(launchParams.vk_app_hash);
-                         if (launchWord) {
-                             startGame(launchWord.length, launchWord);
-                             gameStartedFromUrl = true;
-                         }
+                    let launchWord = extractWordFromHashData(launchParams.vk_app_hash) || extractWordFromHashData(launchParams.vk_hash);
+                    if (launchWord) {
+                         startGame(launchWord.length, launchWord);
+                         gameStartedFromUrl = true;
                     }
                 }
             } catch (error) {
                 console.error("VK Bridge initialization failed", error);
-                if (!vkUserId) {
-                    vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
-                    localStorage.setItem('guestUserId', vkUserId);
-                }
+                vkUserId = localStorage.getItem('guestUserId') || `guest_${Date.now()}`;
+                localStorage.setItem('guestUserId', vkUserId);
             }
            
             loadTheme();
@@ -3882,7 +3901,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 showMainMenu();
             }
         }
-
+        
         async function copyToClipboard(text) {
             try {
                 if (navigator.clipboard && window.isSecureContext) {
@@ -4396,4 +4415,3 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
     </script>
 </body>
 </html>
-
