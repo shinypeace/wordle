@@ -279,7 +279,7 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        const APP_ID = 54683476; // Ваш ID приложения
+        const APP_ID = 54683476; 
         let vkUserId = null;
 const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
 "ВРАЧ", "ВХОД", "ГЛАЗ", "ГОРА", "ГРЕХ", "ГУБА", "ДАМА", "ДАЧА", "ДВОР", "ДЕЛО", "ДЕНЬ", "ДОЛГ", "ДОЛЯ", "ДОЧЬ", "ДРУГ", "ДУМА", "ДУША", "ДЯДЯ", "ЖЕНА", "ЗВУК", "ЗИМА", "ЗНАК",
@@ -3796,73 +3796,61 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             return btoa(encodeURIComponent(word));
         }
 
-        // --- ИЗМЕНЕННЫЙ БЛОК: НОВЫЙ БРОНЕБОЙНЫЙ ПАРСЕР ---
-        function extractWordFromHashData(str) {
+        // --- ЭКСТРЕМАЛЬНЫЙ ПАРСЕР (ВЕРСИЯ 2.0) ---
+        // Игнорирует логику ключей и ищет зашифрованное русское слово ВЕЗДЕ в URL
+        function extractWordFromAnyString(str) {
             if (!str) return null;
-            try { 
-                // В мобильном ВК данные могут прийти закодированными (url-encoded)
-                str = decodeURIComponent(str); 
-            } catch(e){}
+            let decoded = str;
+            // Пробиваем возможную двойную кодировку от мобильных браузеров
+            try { decoded = decodeURIComponent(str); } catch(e) {}
+            try { decoded = decodeURIComponent(decoded); } catch(e) {}
             
-            // Ищем конструкцию word=XXXX, останавливаемся на &, /, ?, #
-            const match = str.match(/word=([^&/?#]+)/); 
-            if (match) {
-                let encoded = match[1];
-                // Вычищаем любой мусор (пробелы, слэши), оставляем только Base64 символы
-                encoded = encoded.replace(/[^A-Za-z0-9+/=]/g, ''); 
-                try {
-                    let decoded = decodeURIComponent(atob(encoded));
-                    if (decoded && decoded.length >= 4 && decoded.length <= 11) {
-                        return decoded.toLowerCase();
-                    }
-                } catch(e) {}
-            }
-            return null;
-        }
-
-        // Перебор всех мест, куда мобильный ВК или браузер мог засунуть ссылку
-        function getInitialWord() {
-            const searchParams = new URLSearchParams(window.location.search);
+            // Рубим весь мусор из ссылки на куски по любым разделителям
+            const parts = decoded.split(/[&?#=\/]/); 
             
-            const sources = [
-                searchParams.get('vk_hash'),           // Сюда мобильный ВК кладет хэш
-                searchParams.get('vk_app_hash'),       // Альтернативный параметр ВК
-                window.location.hash.replace('#', ''), // Для обычной ПК-версии
-                window.location.search                 // На всякий случай
-            ];
-
-            for (let source of sources) {
-                if (source) {
-                    const word = extractWordFromHashData(source);
-                    if (word) return word;
+            for (let part of parts) {
+                // Чиним баг мобилок, которые иногда превращают символ '+' в пробел в Base64
+                part = part.replace(/\s/g, '+');
+                
+                // Если кусок похож на наш шифр (только латиница/цифры/символы Base64 и не слишком короткий)
+                if (part.length >= 16 && /^[A-Za-z0-9+/=]+$/.test(part)) {
+                    try {
+                        let word = decodeURIComponent(atob(part));
+                        // Финальная проверка: точно ли это русское слово нужной длины? (чтобы не словить системный кэш ВК)
+                        if (/^[а-яё]{4,11}$/i.test(word)) {
+                            return word.toLowerCase();
+                        }
+                    } catch(e) {}
                 }
             }
             return null;
         }
-        // --- КОНЕЦ ИЗМЕНЕННОГО БЛОКА ---
+        // --- КОНЕЦ ПАРСЕРА ---
 
         async function init() {
             let gameStartedFromUrl = false;
             
-            // 1. Слушаем события мобильного клиента (важно для Android/iOS, если игра висела в фоне)
-            vkBridge.subscribe((e) => {
-                if (e.detail.type === 'VKWebAppChangeFragment') {
-                    let foundWord = extractWordFromHashData(e.detail.data.location);
-                    if (foundWord) {
-                        startGame(foundWord.length, foundWord);
-                    }
-                }
-            });
-
-            // 2. Ищем слово во всех возможных местах при старте игры
-            let initialWord = getInitialWord();
+            // 1. Агрессивно ищем слово во всем URL страницы сразу при запуске
+            let initialWord = extractWordFromAnyString(window.location.href);
+            
             if (initialWord) {
+                // Если это ПК и есть хэш, чистим его для красоты
                 if (window.location.hash) {
                     history.replaceState(null, document.title, window.location.pathname + window.location.search);
                 }
                 startGame(initialWord.length, initialWord);
                 gameStartedFromUrl = true;
             }
+
+            // 2. Слушаем события клиента ВК (бывает, что на iOS ссылка прокидывается с задержкой)
+            vkBridge.subscribe((e) => {
+                if (e.detail.type === 'VKWebAppChangeFragment') {
+                    let foundWord = extractWordFromAnyString(e.detail.data.location);
+                    if (foundWord) {
+                        startGame(foundWord.length, foundWord);
+                    }
+                }
+            });
             
             try {
                 await vkBridge.send('VKWebAppInit');
@@ -3870,16 +3858,16 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     vkBridge.send('VKWebAppGetUserInfo'),
                     vkBridge.send('VKWebAppGetLaunchParams')
                 ]);
+                
                 if (results[0].status === 'fulfilled') {
                     vkUserId = results[0].value.id;
                 } else {
                     throw new Error("Could not get user info");
                 }
                 
-                // 3. Последняя страховка: если слова не было в ссылке, но оно пришло в стартовых параметрах моста ВК
+                // 3. Последняя надежда: сканируем параметры запуска напрямую от моста ВК
                 if (results[1].status === 'fulfilled' && !gameStartedFromUrl) {
-                    let launchParams = results[1].value;
-                    let launchWord = extractWordFromHashData(launchParams.vk_app_hash) || extractWordFromHashData(launchParams.vk_hash);
+                    let launchWord = extractWordFromAnyString(JSON.stringify(results[1].value));
                     if (launchWord) {
                          startGame(launchWord.length, launchWord);
                          gameStartedFromUrl = true;
@@ -3896,7 +3884,13 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             createMainMenu();
             addEventListeners();
            
-            // Если игра не была запущена по ссылке, открываем меню
+            // РАДАР (DEBUG MODE) ДЛЯ ОТЛОВА БАГОВ
+            // Если игра открыла главное меню, но в URL мы видим `JUQw` (так начинаются почти все русские слова в Base64)
+            if (!gameStartedFromUrl && window.location.href.includes('JUQw')) {
+                alert("DEBUG ВК: Ссылка найдена, но не распарсилась. Пожалуйста, сделай скриншот этого текста и пришли разработчику:\n\n" + window.location.href);
+            }
+
+            // Запускаем главное меню, только если слово 100% не найдено
             if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
                 showMainMenu();
             }
@@ -4414,4 +4408,4 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
     });
     </script>
 </body>
-</html> 
+</html>
