@@ -4151,30 +4151,40 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
         async function handleShareWord() {
-            let word = wordToShareInput.value.trim().toLowerCase();
-            if (word.length < 4) { showToast('Слово слишком короткое'); return; }
-            if (word.length > 11) { showToast('Слово слишком длинное'); return; }
-            if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
-           
-            const encodedWord = encodeWord(word);
-            if (!encodedWord) {
-                showToast('Ошибка при создании ссылки');
-                return;
-            }
-            
-            const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
-            
-            try {
-                await vkBridge.send('VKWebAppShare', { 
-                    link: shareUrl,
-                    text: 'Я загадал тебе слово! Попробуй угадать 👇'
-                });
-                showToast('Ссылка отправлена!');
-                setTimeout(showMainMenu, 500); 
-            } catch (error) {
-                console.log("Пользователь отменил шаринг");
-            }
-        }
+    let word = wordToShareInput.value.trim().toLowerCase();
+    if (word.length < 4) { showToast('Слово слишком короткое'); return; }
+    if (word.length > 11) { showToast('Слово слишком длинное'); return; }
+    if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
+   
+    const encodedWord = encodeWord(word);
+    if (!encodedWord) {
+        showToast('Ошибка при создании ссылки');
+        return;
+    }
+    
+    // Формируем ссылку
+    const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
+    
+    // Формируем новый текст именно так, как ты описал
+    const messageText = `Я загадал тебе слово! Попробуй угадать (открывай по ссылке)\n\n${shareUrl}`;
+    
+    // Подстраховка: копируем текст в буфер обмена игрока.
+    // Если ВК вдруг обрежет параметр text при вызове окна шаринга,
+    // игрок сможет просто вставить готовый текст из буфера.
+    await copyToClipboard(messageText);
+    
+    try {
+        await vkBridge.send('VKWebAppShare', { 
+            link: shareUrl, // Сниппет ВК все равно прикрепит, это обязательно
+            text: messageText // Передаем наш новый шаблон текста
+        });
+        showToast('Ссылка скопирована и отправлена!');
+        setTimeout(showMainMenu, 500); 
+    } catch (error) {
+        console.log("Пользователь отменил шаринг");
+    }
+}
+
         async function handleHint() {
             if (isGameOver || isProcessing) return;
             try {
