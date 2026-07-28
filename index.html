@@ -41,9 +41,27 @@
             --shadow-color: rgba(0, 0, 0, 0.4);
             --text-color-secondary: #a3a3a3;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        
+        /* Запрет выделения текста */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Исключение: разрешаем выделять и печатать текст в поле ввода */
+        input {
+            -webkit-user-select: auto;
+            -ms-user-select: auto;
+            user-select: auto;
+        }
+
         html, body { height: 100%; overscroll-behavior-y: contain; }
-        body { font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; transition: background-color 0.3s, color 0.3s; overflow: hidden; user-select: none; }
+        body { font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; transition: background-color 0.3s, color 0.3s; overflow: hidden; }
         #app { width: 100%; height: 100%; max-width: 500px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: constant(safe-area-inset-bottom); padding-bottom: env(safe-area-inset-bottom); }
         .hidden { display: none !important; }
         #main-menu {
@@ -74,14 +92,14 @@
             cursor: pointer; 
             transition: background-color 0.2s, transform 0.2s, filter 0.2s; 
             box-shadow: 0 2px 5px var(--shadow-color); 
-            user-select: none; 
-            white-space: nowrap; 
-            position: relative; /* Для счетчика побед */
+            position: relative; 
             overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .menu-button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
         
-        /* Стили для заблокированной кнопки */
         .menu-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -208,8 +226,8 @@
                 <h2>Загадайте слово</h2>
                 <p>Введите слово от 4 до 11 букв</p>
                 <input type="text" id="word-to-share-input" class="input-field" maxlength="11" placeholder="Ваше слово...">
-                <button id="share-word-btn" class="menu-button primary">Поделиться словом</button>
-                 <button id="back-to-main-menu-btn" class="menu-button">Назад</button>
+                <button id="share-word-btn" class="menu-button primary" style="width: 100%;">Поделиться словом</button>
+                 <button id="back-to-main-menu-btn" class="menu-button" style="width: 100%;">Назад</button>
             </div>
         </div>
         <div id="game-screen" class="hidden">
@@ -305,11 +323,9 @@
     </div>
     <script>
     document.addEventListener('DOMContentLoaded', async () => {
-        // ИСПРАВЛЕНИЕ: Актуальный ID приложения
         const APP_ID = 54683476; 
         let vkUserId = null;
         
-        // Сколько побед нужно для открытия следующего уровня
         const WINS_TO_UNLOCK = 10;
 
 const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
@@ -3816,7 +3832,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         let isGameOver = false;
         let isProcessing = false;
         let isFriendMode = false;
-        let gamesPlayedSinceAd = 0;
+        let gamesPlayedSinceAd = 0; // Счетчик игр для рекламы
         let boardState = [];
         let shareableResult = [];
         let stats = {};
@@ -3901,10 +3917,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             await loadStats();
             createMainMenu();
             addEventListeners();
-           
-            if (!gameStartedFromUrl && window.location.href.includes('JUQw')) {
-                alert("DEBUG ВК: Ссылка найдена, но не распарсилась. Пожалуйста, сделай скриншот этого текста и пришли разработчику:\n\n" + window.location.href);
-            }
 
             if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
                 showMainMenu();
@@ -3963,7 +3975,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         function adjustGameHeight() { createBoard(); }
         
         function showMainMenu() {
-            createMainMenu(); // Обновляем меню при каждом открытии, чтобы замочки пересчитались
+            createMainMenu(); 
             mainMenu.classList.remove('hidden');
             gameScreen.classList.add('hidden');
             friendGameScreen.classList.add('hidden');
@@ -3986,7 +3998,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         
         function createMainMenu() {
             lengthSelector.innerHTML = '';
-            // Сортируем длины по возрастанию, чтобы логика цепочки работала верно
             const availableLengths = Object.keys(guessableWordsData.words).sort((a,b) => a - b);
             
             availableLengths.forEach((len, index) => {
@@ -3997,7 +4008,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 let isUnlocked = true;
                 let winsOnPrev = 0;
                 
-                // Проверяем количество побед на предыдущем уровне сложности
                 if (index > 0) {
                     const prevLen = availableLengths[index - 1];
                     winsOnPrev = stats[prevLen] ? stats[prevLen].wins : 0;
@@ -4012,15 +4022,15 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     button.textContent = labelText;
                 } else {
                     button.disabled = true;
-                    // Оформление заблокированной кнопки с иконкой и счетчиком в углу
+                    // ОГРОМНЫЙ замок вынесен в абсолютное позиционирование, чтобы его не сжимал текст
                     button.innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: center; opacity: 0.9;">
-                            <svg style="width: 20px; height: 20px; margin-right: 6px;" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>${labelText}</span>
+                        <svg style="position: absolute; top: 6px; left: 6px; width: 22px; height: 22px; opacity: 0.85;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; opacity: 0.9;">
+                            <span style="font-size: 0.9rem; line-height: 1.1; white-space: normal;">${labelText}</span>
                         </div>
-                        <div style="position: absolute; bottom: 4px; right: 8px; font-size: 0.75rem; font-weight: bold; opacity: 0.7; color: var(--key-text-color);">
+                        <div style="position: absolute; bottom: 4px; right: 6px; font-size: 0.75rem; font-weight: 900; opacity: 0.8; color: var(--key-text-color);">
                             ${winsOnPrev}/${WINS_TO_UNLOCK}
                         </div>
                     `;
@@ -4205,7 +4215,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
         
-        // ИСПРАВЛЕНИЕ: Отправка ссылки текстом
         async function handleShareWord() {
             let word = wordToShareInput.value.trim().toLowerCase();
             if (word.length < 4) { showToast('Слово слишком короткое'); return; }
@@ -4261,10 +4270,12 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 showToast('Ошибка при показе рекламы');
             }
         }
+        
         async function onGameEnd() {
             if (isFriendMode) return;
             gamesPlayedSinceAd++;
-            if (gamesPlayedSinceAd >= 2) {
+            // РЕКЛАМА КАЖДЫЕ 4 ИГРЫ
+            if (gamesPlayedSinceAd >= 4) {
                 try {
                     const adStatus = await vkBridge.send('VKWebAppCheckNativeAds', { ad_format: 'interstitial' });
                     if(adStatus.result) {
@@ -4274,6 +4285,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 } catch (error) { console.error('Interstitial ad error:', error); }
             }
         }
+        
         async function winGame() {
             isGameOver = true;
             await updateStats(true);
@@ -4416,7 +4428,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             container.appendChild(table);
         }
         function addEventListeners() {
-            // Перехват кликов по кнопке с учетом новых вложенных элементов
             lengthSelector.addEventListener('click', e => { 
                 const btn = e.target.closest('.menu-button');
                 if (btn && !btn.disabled) { 
@@ -4455,7 +4466,6 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             newGameButton.addEventListener('click', () => { endgameModal.classList.add('hidden'); startGame(wordLength); });
             backToMenuFromEndgameBtn.addEventListener('click', () => { endgameModal.classList.add('hidden'); showMainMenu(); });
             
-            // ИСПРАВЛЕНИЕ: Отправка ссылки текстом для кнопки "Поделиться" после игры
             shareButton.addEventListener('click', async () => {
                 const shareText = createShareableText();
                 const shareUrl = `https://vk.com/app${APP_ID}`;
