@@ -61,34 +61,8 @@
         #main-menu p { font-size: 1.1rem; color: var(--text-color-secondary); }
         .length-selector { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; max-width: 380px; }
         .main-menu-buttons { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 380px; }
-        
-        .menu-button { 
-            background-color: var(--key-bg); 
-            color: var(--key-text-color); 
-            font-family: var(--font-family); 
-            font-size: 1rem; 
-            font-weight: 700; 
-            border: none; 
-            padding: 20px 10px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            transition: background-color 0.2s, transform 0.2s, filter 0.2s; 
-            box-shadow: 0 2px 5px var(--shadow-color); 
-            user-select: none; 
-            white-space: nowrap; 
-            position: relative; /* Для счетчика побед */
-            overflow: hidden;
-        }
-        .menu-button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-        
-        /* Стили для заблокированной кнопки */
-        .menu-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            box-shadow: none;
-            filter: grayscale(0.5);
-        }
-        
+        .menu-button { background-color: var(--key-bg); color: var(--key-text-color); font-family: var(--font-family); font-size: 1rem; font-weight: 700; border: none; padding: 20px 10px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s, transform 0.2s; box-shadow: 0 2px 5px var(--shadow-color); user-select: none; white-space: nowrap; }
+        .menu-button:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .friend-mode-button { background-color: var(--color-correct); color: var(--color-text-light); }
         .stats-button { background-color: var(--color-present); color: var(--color-text-light); }
        
@@ -307,10 +281,6 @@
     document.addEventListener('DOMContentLoaded', async () => {
         const APP_ID = 54683476; 
         let vkUserId = null;
-        
-        // Сколько побед нужно для открытия следующего уровня
-        const WINS_TO_UNLOCK = 10;
-
 const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК", "БЕДА", "БОЛЬ", "БРАК", "БРАТ", "БЫЛЬ", "ВЕЩЬ", "ВИНА", "ВИНО", "ВКУС", "ВОДА", "ВОЛЯ", "ВРАГ",
 "ВРАЧ", "ВХОД", "ГЛАЗ", "ГОРА", "ГРЕХ", "ГУБА", "ДАМА", "ДАЧА", "ДВОР", "ДЕЛО", "ДЕНЬ", "ДОЛГ", "ДОЛЯ", "ДОЧЬ", "ДРУГ", "ДУМА", "ДУША", "ДЯДЯ", "ЖЕНА", "ЗВУК", "ЗИМА", "ЗНАК",
 "ЗОНА", "ИГРА", "ИДЕЯ", "ИТОГ", "ИЮЛЬ", "ИЮНЬ", "КАДР", "КЛУБ", "КЛЮЧ", "КОЖА", "КОНЬ", "КОФЕ", "КРАЙ", "КРИК", "КУРС", "КУСТ", "ЛЕТО", "ЛИСТ", "ЛИЦО", "МАМА", "МАТЬ", "МЕРА",
@@ -3826,20 +3796,27 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             return btoa(encodeURIComponent(word));
         }
 
+        // --- ЭКСТРЕМАЛЬНЫЙ ПАРСЕР (ВЕРСИЯ 2.0) ---
+        // Игнорирует логику ключей и ищет зашифрованное русское слово ВЕЗДЕ в URL
         function extractWordFromAnyString(str) {
             if (!str) return null;
             let decoded = str;
+            // Пробиваем возможную двойную кодировку от мобильных браузеров
             try { decoded = decodeURIComponent(str); } catch(e) {}
             try { decoded = decodeURIComponent(decoded); } catch(e) {}
             
+            // Рубим весь мусор из ссылки на куски по любым разделителям
             const parts = decoded.split(/[&?#=\/]/); 
             
             for (let part of parts) {
+                // Чиним баг мобилок, которые иногда превращают символ '+' в пробел в Base64
                 part = part.replace(/\s/g, '+');
                 
+                // Если кусок похож на наш шифр (только латиница/цифры/символы Base64 и не слишком короткий)
                 if (part.length >= 16 && /^[A-Za-z0-9+/=]+$/.test(part)) {
                     try {
                         let word = decodeURIComponent(atob(part));
+                        // Финальная проверка: точно ли это русское слово нужной длины? (чтобы не словить системный кэш ВК)
                         if (/^[а-яё]{4,11}$/i.test(word)) {
                             return word.toLowerCase();
                         }
@@ -3848,12 +3825,16 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
             return null;
         }
+        // --- КОНЕЦ ПАРСЕРА ---
 
         async function init() {
             let gameStartedFromUrl = false;
+            
+            // 1. Агрессивно ищем слово во всем URL страницы сразу при запуске
             let initialWord = extractWordFromAnyString(window.location.href);
             
             if (initialWord) {
+                // Если это ПК и есть хэш, чистим его для красоты
                 if (window.location.hash) {
                     history.replaceState(null, document.title, window.location.pathname + window.location.search);
                 }
@@ -3861,6 +3842,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                 gameStartedFromUrl = true;
             }
 
+            // 2. Слушаем события клиента ВК (бывает, что на iOS ссылка прокидывается с задержкой)
             vkBridge.subscribe((e) => {
                 if (e.detail.type === 'VKWebAppChangeFragment') {
                     let foundWord = extractWordFromAnyString(e.detail.data.location);
@@ -3883,6 +3865,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
                     throw new Error("Could not get user info");
                 }
                 
+                // 3. Последняя надежда: сканируем параметры запуска напрямую от моста ВК
                 if (results[1].status === 'fulfilled' && !gameStartedFromUrl) {
                     let launchWord = extractWordFromAnyString(JSON.stringify(results[1].value));
                     if (launchWord) {
@@ -3901,10 +3884,13 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             createMainMenu();
             addEventListeners();
            
+            // РАДАР (DEBUG MODE) ДЛЯ ОТЛОВА БАГОВ
+            // Если игра открыла главное меню, но в URL мы видим `JUQw` (так начинаются почти все русские слова в Base64)
             if (!gameStartedFromUrl && window.location.href.includes('JUQw')) {
                 alert("DEBUG ВК: Ссылка найдена, но не распарсилась. Пожалуйста, сделай скриншот этого текста и пришли разработчику:\n\n" + window.location.href);
             }
 
+            // Запускаем главное меню, только если слово 100% не найдено
             if (!gameStartedFromUrl && gameScreen.classList.contains('hidden')) {
                 showMainMenu();
             }
@@ -3960,15 +3946,12 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
         }
         function debounce(func, delay) { let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; }
         function adjustGameHeight() { createBoard(); }
-        
         function showMainMenu() {
-            createMainMenu(); // Обновляем меню при каждом открытии, чтобы замочки пересчитались
             mainMenu.classList.remove('hidden');
             gameScreen.classList.add('hidden');
             friendGameScreen.classList.add('hidden');
             vkBridge.send('VKWebAppShowBannerAd', { banner_location: 'bottom' }).catch(e => console.error(e));
         }
-        
         function showFriendScreen() {
             wordToShareInput.value = '';
             mainMenu.classList.add('hidden');
@@ -3982,55 +3965,17 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             if ([2, 3, 4].includes(num % 10) && ![12, 13, 14].includes(num % 100)) return 'буквы';
             return 'букв';
         }
-        
-        // --- ОБНОВЛЕННАЯ ФУНКЦИЯ ГЕНЕРАЦИИ МЕНЮ ---
         function createMainMenu() {
             lengthSelector.innerHTML = '';
-            // Сортируем длины по возрастанию, чтобы логика цепочки работала верно
-            const availableLengths = Object.keys(guessableWordsData.words).sort((a,b) => a - b);
-            
-            availableLengths.forEach((len, index) => {
+            const availableLengths = Object.keys(guessableWordsData.words);
+            availableLengths.forEach(len => {
                 const button = document.createElement('button');
                 button.className = 'menu-button';
+                button.textContent = `${len} ${getPluralizedLetters(len)}`;
                 button.dataset.length = len;
-                
-                let isUnlocked = true;
-                let winsOnPrev = 0;
-                
-                // Проверяем количество побед на предыдущем уровне сложности
-                if (index > 0) {
-                    const prevLen = availableLengths[index - 1];
-                    winsOnPrev = stats[prevLen] ? stats[prevLen].wins : 0;
-                    if (winsOnPrev < WINS_TO_UNLOCK) {
-                        isUnlocked = false;
-                    }
-                }
-                
-                const labelText = `${len} ${getPluralizedLetters(len)}`;
-                
-                if (isUnlocked) {
-                    button.textContent = labelText;
-                } else {
-                    button.disabled = true;
-                    // Оформление заблокированной кнопки с иконкой и счетчиком в углу
-                    button.innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: center; opacity: 0.9;">
-                            <svg style="width: 20px; height: 20px; margin-right: 6px;" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd"></path>
-                            </svg>
-                            <span>${labelText}</span>
-                        </div>
-                        <div style="position: absolute; bottom: 4px; right: 8px; font-size: 0.75rem; font-weight: bold; opacity: 0.7; color: var(--key-text-color);">
-                            ${winsOnPrev}/${WINS_TO_UNLOCK}
-                        </div>
-                    `;
-                }
-                
                 lengthSelector.appendChild(button);
             });
         }
-        // --- КОНЕЦ ОБНОВЛЕНИЯ МЕНЮ ---
-
         function startGame(length, customWord = null) {
             wordLength = parseInt(length);
             isFriendMode = customWord !== null;
@@ -4206,30 +4151,40 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             }
         }
         async function handleShareWord() {
-            let word = wordToShareInput.value.trim().toLowerCase();
-            if (word.length < 4) { showToast('Слово слишком короткое'); return; }
-            if (word.length > 11) { showToast('Слово слишком длинное'); return; }
-            if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
-           
-            const encodedWord = encodeWord(word);
-            if (!encodedWord) {
-                showToast('Ошибка при создании ссылки');
-                return;
-            }
-            
-            const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
-            
-            try {
-                await vkBridge.send('VKWebAppShare', { 
-                    link: shareUrl,
-                    text: 'Я загадал тебе слово! Попробуй угадать 👇'
-                });
-                showToast('Ссылка отправлена!');
-                setTimeout(showMainMenu, 500); 
-            } catch (error) {
-                console.log("Пользователь отменил шаринг");
-            }
-        }
+    let word = wordToShareInput.value.trim().toLowerCase();
+    if (word.length < 4) { showToast('Слово слишком короткое'); return; }
+    if (word.length > 11) { showToast('Слово слишком длинное'); return; }
+    if (!/^[а-яё]+$/.test(word)) { showToast('Только русские буквы'); return; }
+   
+    const encodedWord = encodeWord(word);
+    if (!encodedWord) {
+        showToast('Ошибка при создании ссылки');
+        return;
+    }
+    
+    // Формируем ссылку
+    const shareUrl = `https://vk.com/app${APP_ID}#word=${encodedWord}`;
+    
+    // Формируем новый текст именно так, как ты описал
+    const messageText = `Я загадал тебе слово! Попробуй угадать (открывай по ссылке)\n\n${shareUrl}`;
+    
+    // Подстраховка: копируем текст в буфер обмена игрока.
+    // Если ВК вдруг обрежет параметр text при вызове окна шаринга,
+    // игрок сможет просто вставить готовый текст из буфера.
+    await copyToClipboard(messageText);
+    
+    try {
+        await vkBridge.send('VKWebAppShare', { 
+            link: shareUrl, // Сниппет ВК все равно прикрепит, это обязательно
+            text: messageText // Передаем наш новый шаблон текста
+        });
+        showToast('Ссылка скопирована и отправлена!');
+        setTimeout(showMainMenu, 500); 
+    } catch (error) {
+        console.log("Пользователь отменил шаринг");
+    }
+}
+
         async function handleHint() {
             if (isGameOver || isProcessing) return;
             try {
@@ -4412,13 +4367,7 @@ const guessableWordsData = { "words": { "4": ["БАБА", "БАЗА", "БАНК"
             container.appendChild(table);
         }
         function addEventListeners() {
-            // ИСПРАВЛЕНИЕ: Перехват кликов по дочерним элементам заблокированной кнопки
-            lengthSelector.addEventListener('click', e => { 
-                const btn = e.target.closest('.menu-button');
-                if (btn && !btn.disabled) { 
-                    startGame(btn.dataset.length); 
-                } 
-            });
+            lengthSelector.addEventListener('click', e => { if (e.target.classList.contains('menu-button')) { startGame(e.target.dataset.length); } });
             friendModeBtn.addEventListener('click', showFriendScreen);
             statsButton.addEventListener('click', () => { renderStatsTable(); statsModal.classList.remove('hidden'); });
             rulesButton.addEventListener('click', () => { rulesModal.classList.remove('hidden'); });
